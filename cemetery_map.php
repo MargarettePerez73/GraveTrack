@@ -367,6 +367,18 @@ include 'includes/header.php';
         transform: scale(0.95) !important;
     }
 
+    /* Search → modal focus highlight */
+    .deceased-card.focused {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245,158,11,0.22), 0 10px 24px rgba(15, 23, 42, 0.12);
+        animation: focusPulse 1.2s ease-out 1;
+    }
+    @keyframes focusPulse {
+        0%   { transform: translateY(0); }
+        40%  { transform: translateY(-2px); }
+        100% { transform: translateY(0); }
+    }
+
     @keyframes pulse {
         0%, 100% { box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.8); }
         50% { box-shadow: 0 0 0 6px #fbbf24, 0 0 30px rgba(251,191,36,1); }
@@ -932,9 +944,11 @@ function renderBlockColumn(blockName, phaseName, findPlot, lotsCount = 20) {
         const displayBlock = blockName || 'Unnamed';
         const plotSection = plot ? plot.section : '';
 
+        // Hover tooltip should show deceased names (or Vacant)
+        const deceasedNames = plot && plot.deceased_names ? String(plot.deceased_names) : '';
         const tooltip = plot
-            ? `Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot} - ${plot.status}`
-            : `Block ${displayBlock}, Lot ${lot} - Vacant`;
+            ? (deceasedNames ? deceasedNames : (plot.status === 'Vacant' ? 'Vacant' : 'Occupied'))
+            : 'Vacant';
 
         html += `
             <div class="lot-box ${colorClass}"
@@ -969,7 +983,7 @@ function getPlotColorClass(plot) {
 
 /* ─── Plot detail modal ─── */
 
-async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
+async function viewPlotDetails(plotId, blockName, lotNumber, phaseName, focusDeceasedId = null) {
     if (!plotId || plotId === null || plotId === 'null') {
         const displayBlock = blockName || 'Unnamed';
 
@@ -1069,7 +1083,7 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                 data.deceased_records.forEach(record => {
                     const safeName = escapeJsString(record.full_name || '');
                     content += `
-                        <div class="deceased-card">
+                        <div class="deceased-card" id="deceased-card-${record.deceased_id}">
                             <div class="deceased-name">${record.full_name || 'Unnamed'}</div>
                             <p class="deceased-meta">
                                 <strong>Died:</strong> ${formatDate(record.date_of_death)}<br>
@@ -1220,6 +1234,17 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
         document.getElementById('editBtn').style.display = 'none';
 
         new bootstrap.Modal(document.getElementById('plotModal')).show();
+
+        if (focusDeceasedId) {
+            setTimeout(() => {
+                const el = document.getElementById(`deceased-card-${focusDeceasedId}`);
+                if (el) {
+                    el.classList.add('focused');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => el.classList.remove('focused'), 2500);
+                }
+            }, 200);
+        }
 
     } catch (error) {
         console.error('Error fetching plot details:', error);
@@ -1482,24 +1507,22 @@ document.getElementById('searchInput').addEventListener('input', function () {
     const searchTerm = this.value.trim();
     clearTimeout(searchTimeout);
 
-    if (searchTerm.length < 2) {
+    if (searchTerm.length < 1) {
         hideSearchResults();
         clearHighlight();
         return;
     }
 
-    searchTimeout = setTimeout(() => performLiveSearch(searchTerm), 300);
+    // Client-side search from preloaded deceased records (instant matches while typing)
+    searchTimeout = setTimeout(() => performLiveSearch(searchTerm), 120);
 });
 
 async function performLiveSearch(searchTerm) {
-    try {
-        const response = await fetch(`/api/search_deceased.php?q=${encodeURIComponent(searchTerm)}`);
-        const data     = await response.json();
-
-        if (data.success) displaySearchResults(data.results);
-    } catch (error) {
-        console.error('Search error:', error);
-    }
+    const q = String(searchTerm || '').toLowerCase();
+    const results = (allDeceasedRecords || [])
+        .filter(r => String(r.full_name || '').toLowerCase().includes(q))
+        .slice(0, 12);
+    displaySearchResults(results);
 }
 
 function displaySearchResults(results) {
@@ -1514,7 +1537,7 @@ function displaySearchResults(results) {
 
     container.innerHTML = results.map(record => `
         <div class="search-result-item"
-             onclick="selectSearchResult(${record.plot_id}, '${record.block}', ${record.lot})">
+             onclick="selectSearchResult(${record.plot_id}, '${record.block}', ${record.lot}, '${record.phase || ''}', ${record.deceased_id})">
             <div class="search-result-name">${record.full_name}</div>
             <div class="search-result-location">
                 <i class="fas fa-map-marker-alt"></i>
@@ -1530,10 +1553,10 @@ function displaySearchResults(results) {
     highlightPlotsFromResults(results);
 }
 
-function selectSearchResult(plotId, block, lot) {
+function selectSearchResult(plotId, block, lot, phaseName = '', deceasedId = null) {
     hideSearchResults();
     document.getElementById('searchInput').value = '';
-    viewPlotDetails(plotId, block, lot, '');
+    viewPlotDetails(plotId, block, lot, phaseName || '', deceasedId);
 
     setTimeout(() => {
         highlightPlot(block, lot);
