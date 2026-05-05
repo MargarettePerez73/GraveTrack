@@ -597,10 +597,12 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
 
         // Engineer can add burial record to vacant plot
         if (userRole === 'Engineer') {
+            // For truly vacant plots with no DB record, we can't link via plot_id
+            // Display message instead
             vacantContent += `
-                <div class="mt-3">
-                    <a href="adding_burial_records.php?block=${blockName}&lot=${lotNumber}&phase=${phaseName}"
-                       class="btn btn-success btn-sm">
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle"></i> This plot exists on the map but has no database record yet. 
+                    <a href="adding_burial_records.php" class="btn btn-success btn-sm mt-2">
                         <i class="fas fa-plus"></i> Add Burial Record
                     </a>
                 </div>

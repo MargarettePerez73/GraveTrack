@@ -107,6 +107,27 @@ include 'includes/header.php';
                         </div>
                     </div>
 
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Block</label>
+                            <input type="text" class="form-control" id="plot_block" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Section</label>
+                            <input type="text" class="form-control" id="plot_section" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Lot</label>
+                            <input type="text" class="form-control" id="plot_lot" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
+
                     <!-- Contact Information -->
                     <div class="col-12 mt-4">
                         <h5 class="mb-3" style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">
@@ -169,11 +190,12 @@ include 'includes/header.php';
                     option.textContent = plot.label + ` (${plot.type})`;
                     option.dataset.type = plot.type;
                     option.dataset.block = plot.block;
+                    option.dataset.section = plot.section;
                     option.dataset.lot = plot.lot;
                     select.appendChild(option);
                 });
 
-                // Pre-select plot if block and lot are in URL
+                // Pre-select plot if parameters are in URL
                 preselectPlotFromURL();
             }
         } catch (error) {
@@ -183,11 +205,20 @@ include 'includes/header.php';
 
     function preselectPlotFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
+        const plotId = urlParams.get('plot_id');
         const block = urlParams.get('block');
         const lot = urlParams.get('lot');
 
-        if (block && lot) {
-            const select = document.getElementById('plot_id');
+        const select = document.getElementById('plot_id');
+
+        // Priority 1: If plot_id is in URL
+        if (plotId) {
+            select.value = plotId;
+            showPlotInfo();
+            showToast('info', 'Plot Selected', `Plot ${plotId} has been auto-selected`);
+        }
+        // Priority 2: If block and lot are in URL
+        else if (block && lot) {
             for (let i = 0; i < select.options.length; i++) {
                 const option = select.options[i];
                 if (option.dataset.block === block && option.dataset.lot === lot) {
@@ -208,10 +239,22 @@ include 'includes/header.php';
         if (plotId) {
             const selectedOption = select.options[select.selectedIndex];
             const type = selectedOption.dataset.type;
+            const block = selectedOption.dataset.block;
+            const section = selectedOption.dataset.section;
+            const lot = selectedOption.dataset.lot;
+
+            // Auto-fill the text fields
+            document.getElementById('plot_block').value = block || '';
+            document.getElementById('plot_section').value = section || '';
+            document.getElementById('plot_lot').value = lot || '';
+
             plotInfo.textContent = `Plot Type: ${type} | Rental: ₱2,000 per 3 years`;
             plotInfo.style.color = '#10b981';
         } else {
             plotInfo.textContent = '';
+            document.getElementById('plot_block').value = '';
+            document.getElementById('plot_section').value = '';
+            document.getElementById('plot_lot').value = '';
         }
     }
 
@@ -244,7 +287,7 @@ include 'includes/header.php';
                 <div style="text-align: left;">
                     <p><strong>Name:</strong> ${formData.full_name}</p>
                     <p><strong>Date of Death:</strong> ${formData.date_of_death}</p>
-                    <p><strong>Plot:</strong> ${document.getElementById('plot_id').options[document.getElementById('plot_id').selectedIndex].text}</p>
+                    <p><strong>Plot:</strong> Block ${document.getElementById('plot_block').value}, Section ${document.getElementById('plot_section').value}, Lot ${document.getElementById('plot_lot').value}</p>
                 </div>
             `,
             icon: 'question',
