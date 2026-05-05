@@ -151,6 +151,7 @@ function getStatusBadge(status) {
         'Occupied': '<span class="badge badge-occupied">Occupied</span>',
         'Reserved': '<span class="badge badge-reserved">Reserved</span>',
         'Paid': '<span class="badge badge-paid">Paid</span>',
+        'Paid (was overdue)': '<span class="badge badge-paid" title="Fully paid after being overdue">Paid (was overdue)</span>',
         'Unpaid': '<span class="badge badge-unpaid">Unpaid</span>',
         'Pending': '<span class="badge badge-pending">Pending</span>',
         'Overdue': '<span class="badge badge-overdue">Overdue</span>'

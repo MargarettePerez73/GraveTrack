@@ -813,7 +813,7 @@ function getPlotColorClass(plot) {
         const key           = `${plot.block} - ${plot.section} - ${plot.lot}`;
         const paymentStatus = paymentData[key];
 
-        if (paymentStatus === 'Paid' || paymentStatus === 'Partially Paid') return 'fully-paid';
+        if (paymentStatus === 'Paid' || paymentStatus === 'Paid (was overdue)' || paymentStatus === 'Partially Paid') return 'fully-paid';
         if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') return 'overdue';
         return 'unpaid';
     }
@@ -938,7 +938,7 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                     const paymentStatus = paymentData[key] || data.plot.payment_status || 'Unknown';
                     const displayPaymentStatus = paymentStatus === 'Partially Paid' ? 'Paid' : paymentStatus;
                     const statusBadgeColor =
-                        displayPaymentStatus === 'Paid'              ? 'success' :
+                        displayPaymentStatus === 'Paid' || displayPaymentStatus === 'Paid (was overdue)' ? 'success' :
                         paymentStatus === 'Overdue'           ? 'danger'  :
                         paymentStatus === 'Overdue - Partial' ? 'danger'  : 'secondary';
 
@@ -961,6 +961,29 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                 });
 
                 content += '</tbody></table></div>';
+
+                if (data.plot_payment_ledger && data.plot_payment_ledger.length > 0) {
+                    content += '<hr><h6><strong>Payment &amp; transaction history</strong></h6>';
+                    content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
+                    content += '<thead><tr><th>Date</th><th>Deceased</th><th>OR No.</th><th>Paid by</th><th>Amount</th><th>Source</th></tr></thead><tbody>';
+                    data.plot_payment_ledger.forEach(row => {
+                        const src = row.ledger_type === 'payment' ? 'Payment' : 'Transaction';
+                        const orDisp = (row.or_number && String(row.or_number).trim()) ? escapeHtml(String(row.or_number)) : '—';
+                        const paidBy = (row.paid_by && String(row.paid_by).trim()) ? escapeHtml(String(row.paid_by)) : '—';
+                        const deceased = escapeHtml(String(row.deceased_name || ''));
+                        content += `
+                            <tr>
+                                <td>${row.occurred_on ? formatDate(row.occurred_on) : 'N/A'}</td>
+                                <td>${deceased}</td>
+                                <td>${orDisp}</td>
+                                <td>${paidBy}</td>
+                                <td><strong>${typeof formatCurrency === 'function' ? formatCurrency(row.amount) : ('₱' + parseFloat(row.amount || 0).toFixed(2))}</strong></td>
+                                <td><span class="badge bg-secondary">${src}</span></td>
+                            </tr>
+                        `;
+                    });
+                    content += '</tbody></table></div>';
+                }
 
                 if (isOverdue) {
                     content += `
@@ -1232,6 +1255,12 @@ function formatDate(dateString) {
     if (!dateString) return 'N/A';
     const d = new Date(dateString);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /* ─── Live search ─── */

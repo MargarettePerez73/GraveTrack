@@ -524,7 +524,7 @@ include 'includes/header.php';
 
                 let paid = 0, unpaid = 0;
                 data.data.forEach(item => {
-                    if (item.Status === 'Paid') paid++;
+                    if (item.Status === 'Paid' || item.Status === 'Paid (was overdue)') paid++;
                     else unpaid++;
                 });
 

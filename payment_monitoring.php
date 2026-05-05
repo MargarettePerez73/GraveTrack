@@ -660,7 +660,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
                 <table class="compact-table">
                     <thead>
                         <tr>
-                            <th>Transaction ID</th>
+                            <th>OR Number</th>
                             <th>Deceased Name</th>
                             <th>Plot Location</th>
                             <th>Date of Transaction</th>
@@ -821,8 +821,12 @@ if ($_SESSION['role'] !== 'Treasurer') {
         }
     }
 
+    function isPaidStatus(s) {
+        return s === 'Paid' || s === 'Paid (was overdue)';
+    }
+
     function updateStats(payments) {
-        const paid    = payments.filter(p => p.Status === 'Paid').length;
+        const paid    = payments.filter(p => isPaidStatus(p.Status)).length;
         const unpaid  = payments.filter(p => p.Status === 'Unpaid').length;
         const overdue = payments.filter(p => p.Status === 'Overdue').length;
 
@@ -849,7 +853,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
         payments.forEach(payment => {
             const row = `
                 <tr>
-                    <td><strong>${payment.transaction_id}</strong></td>
+                    <td><strong>${payment['OR Number'] || payment.or_number || '—'}</strong></td>
                     <td><strong>${payment['Deceased Name']}</strong></td>
                     <td>${payment['Plot Location']}</td>
                     <td>${payment['Date of Transaction'] ? formatDate(payment['Date of Transaction']) : 'N/A'}</td>
@@ -891,7 +895,8 @@ if ($_SESSION['role'] !== 'Treasurer') {
 
         filtered = filtered.filter(payment => {
             const matchesSearch = payment['Deceased Name'].toLowerCase().includes(searchTerm);
-            const matchesStatus = !status || payment.Status === status;
+            const matchesStatus = !status
+                || (status === 'Paid' ? isPaidStatus(payment.Status) : payment.Status === status);
 
             let matchesAmount = true;
             if (amountRange) {
@@ -1061,11 +1066,12 @@ if ($_SESSION['role'] !== 'Treasurer') {
         btn.disabled = true;
 
         const payload = {
-            plot_id:   rpCurrentPlotId,
-            date:      document.getElementById('rpDate').value,
-            or_number: document.getElementById('rpOrNumber').value.trim(),
-            paid_by:   document.getElementById('rpPaidBy').value.trim(),
-            amount:    parseFloat(document.getElementById('rpAmount').value)
+            plot_id:       rpCurrentPlotId,
+            date:          document.getElementById('rpDate').value,
+            payment_date:  document.getElementById('rpDate').value,
+            or_number:     document.getElementById('rpOrNumber').value.trim(),
+            paid_by:       document.getElementById('rpPaidBy').value.trim(),
+            amount:        parseFloat(document.getElementById('rpAmount').value)
         };
 
         try {
