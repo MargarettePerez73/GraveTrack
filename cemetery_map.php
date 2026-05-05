@@ -7,26 +7,141 @@ include 'includes/header.php';
 <style>
     *, *::before, *::after { box-sizing: border-box; }
 
-    .cemetery-page {
+    .cemetery-layout {
         display: flex;
-        flex-direction: column;
         height: calc(100vh - 60px);
         overflow: hidden;
     }
 
-    /* Legend Bar */
-    .legend-bar {
-        flex-shrink: 0;
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        padding: 12px 20px;
+    /* Sidebar */
+    .cemetery-sidebar {
+        width: 320px;
         background: white;
-        border-bottom: 2px solid #e2e8f0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-right: 3px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
     }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
-    .legend-box { width: 24px; height: 12px; border-radius: 3px; border: 2px solid; }
+
+    .sidebar-section {
+        padding: 20px;
+        border-bottom: 2px solid #f1f5f9;
+    }
+
+    .sidebar-section h6 {
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 15px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Search Box */
+    .search-box {
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 40px 10px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        margin-top: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        z-index: 1000;
+        display: none;
+    }
+
+    .search-results.active {
+        display: block;
+    }
+
+    .search-result-item {
+        padding: 12px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .search-result-item:hover {
+        background: #f8fafc;
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-name {
+        font-weight: 600;
+        color: #1e3a8a;
+        font-size: 13px;
+    }
+
+    .search-result-location {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .search-result-dates {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .no-results {
+        padding: 15px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    /* Legend */
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .legend-box {
+        width: 30px;
+        height: 16px;
+        border-radius: 4px;
+        border: 2px solid;
+        flex-shrink: 0;
+    }
+
     .legend-box.vacant { background: #10b981; border-color: #059669; }
     .legend-box.occupied { background: #ef4444; border-color: #dc2626; }
     .legend-box.fully-paid { background: #10b981; border-color: #059669; }
@@ -34,8 +149,43 @@ include 'includes/header.php';
     .legend-box.unpaid { background: #ef4444; border-color: #dc2626; }
     .legend-box.overdue { background: #991b1b; border-color: #7f1d1d; }
 
+    /* Stats */
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f8fafc;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e3a8a;
+    }
+
+    /* View Mode Badge */
+    .view-mode-badge {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
     /* Map Container */
-    .map-outer {
+    .map-container {
         flex: 1;
         display: flex;
         align-items: center;
@@ -60,14 +210,12 @@ include 'includes/header.php';
         align-items: flex-start;
     }
 
-    /* All Blocks Row */
     .all-blocks {
         display: flex;
         align-items: flex-end;
         gap: 0;
     }
 
-    /* Phase Divider */
     .phase-divider {
         width: 4px;
         background: #1e3a8a;
@@ -76,10 +224,8 @@ include 'includes/header.php';
         margin: 0 8px;
     }
 
-    /* Pair Gap */
     .pair-gap { width: 12px; flex-shrink: 0; }
 
-    /* Block Column */
     .block-col {
         display: flex;
         flex-direction: column;
@@ -101,7 +247,6 @@ include 'includes/header.php';
         gap: 3px;
     }
 
-    /* Plot Box */
     .lot-box {
         width: 50px;
         height: 20px;
@@ -123,17 +268,13 @@ include 'includes/header.php';
         z-index: 100;
     }
 
-    /* Engineer View Colors */
     .lot-box.vacant { background: #10b981; border-color: #059669; color: white; }
     .lot-box.occupied { background: #ef4444; border-color: #dc2626; color: white; }
-
-    /* Treasurer View Colors */
     .lot-box.fully-paid { background: #10b981; border-color: #059669; color: white; }
     .lot-box.partially-paid { background: #f59e0b; border-color: #d97706; color: white; }
     .lot-box.unpaid { background: #ef4444; border-color: #dc2626; color: white; }
     .lot-box.overdue { background: #991b1b; border-color: #7f1d1d; color: white; }
 
-    /* Phase Labels */
     .phase-labels-row {
         display: flex;
         width: 100%;
@@ -150,66 +291,85 @@ include 'includes/header.php';
         text-align: center;
         text-transform: uppercase;
     }
-
-    /* View Mode Badge */
-    .view-mode-badge {
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 12px;
-    }
 </style>
 
-<div class="cemetery-page">
-    <!-- Legend & Search -->
-    <div class="legend-bar">
-        <strong>LEGEND:</strong>
-        <div id="engineerLegend" style="display: none;">
-            <div class="legend-item">
-                <div class="legend-box vacant"></div>
-                <span>Vacant</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box occupied"></div>
-                <span>Occupied</span>
+<div class="cemetery-layout">
+    <!-- Sidebar -->
+    <div class="cemetery-sidebar">
+        <!-- View Mode -->
+        <div class="sidebar-section">
+            <div class="view-mode-badge" id="viewModeBadge">
+                <i class="fas fa-user"></i> Loading...
             </div>
         </div>
-        <div id="treasurerLegend" style="display: none;">
-            <div class="legend-item">
-                <div class="legend-box fully-paid"></div>
-                <span>Fully Paid</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box partially-paid"></div>
-                <span>Partially Paid</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box unpaid"></div>
-                <span>Unpaid</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box overdue"></div>
-                <span>Overdue</span>
+
+        <!-- Search -->
+        <div class="sidebar-section">
+            <h6><i class="fas fa-search"></i> Search Deceased</h6>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Type name to search..." autocomplete="off">
+                <i class="fas fa-search search-icon"></i>
+                <div class="search-results" id="searchResults"></div>
             </div>
         </div>
-        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-            <div class="input-group" style="width: 300px;">
-                <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search by name...">
-                <button class="btn btn-sm btn-primary" onclick="searchDeceased()">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button class="btn btn-sm btn-secondary" onclick="clearSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
+
+        <!-- Legend -->
+        <div class="sidebar-section">
+            <h6><i class="fas fa-map"></i> Legend</h6>
+            <div id="engineerLegend" style="display: none;">
+                <div class="legend-item">
+                    <div class="legend-box vacant"></div>
+                    <span>Vacant Plot</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box occupied"></div>
+                    <span>Occupied Plot</span>
+                </div>
             </div>
-            <span class="view-mode-badge" id="viewModeBadge">Loading...</span>
+            <div id="treasurerLegend" style="display: none;">
+                <div class="legend-item">
+                    <div class="legend-box fully-paid"></div>
+                    <span>Fully Paid (3 Years)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box partially-paid"></div>
+                    <span>Partially Paid</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box unpaid"></div>
+                    <span>Unpaid</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box overdue"></div>
+                    <span>Overdue (Penalty Applied)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="sidebar-section">
+            <h6><i class="fas fa-chart-bar"></i> Statistics</h6>
+            <div class="stat-item">
+                <span class="stat-label">Total Plots</span>
+                <span class="stat-value" id="totalPlots">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Vacant</span>
+                <span class="stat-value" id="vacantPlots" style="color: #10b981;">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Occupied</span>
+                <span class="stat-value" id="occupiedPlots" style="color: #ef4444;">0</span>
+            </div>
+            <div class="stat-item" id="deceasedCountStat">
+                <span class="stat-label">Total Deceased</span>
+                <span class="stat-value" id="totalDeceased">0</span>
+            </div>
         </div>
     </div>
 
     <!-- Map -->
-    <div class="map-outer" id="mapOuter">
+    <div class="map-container" id="mapContainer">
         <div class="map-scaler" id="mapScaler">
             <div class="map-inner" id="mapInner">
                 <div class="text-center py-5">
@@ -248,6 +408,7 @@ let paymentData = {};
 let userRole = '';
 const LOTS_PER_BLOCK = 20;
 let allDeceasedRecords = [];
+let searchTimeout = null;
 
 async function loadCemeteryMap() {
     try {
@@ -266,6 +427,7 @@ async function loadCemeteryMap() {
             }
 
             renderCemeteryMap();
+            updateStatistics();
         }
     } catch (error) {
         console.error('Error loading cemetery map:', error);
@@ -277,6 +439,8 @@ async function loadCemeteryMap() {
 async function loadAllDeceasedRecords() {
     try {
         allDeceasedRecords = [];
+        let totalDeceased = 0;
+
         for (const plot of allPlots) {
             if (plot.status === 'Occupied' && plot.deceased_count > 0) {
                 const response = await fetch(`/api/get_lot_details.php?plot_id=${plot.plot_id}`);
@@ -288,12 +452,16 @@ async function loadAllDeceasedRecords() {
                             plot_id: plot.plot_id,
                             block: plot.block,
                             section: plot.section,
-                            lot: plot.lot
+                            lot: plot.lot,
+                            phase: plot.phase
                         });
+                        totalDeceased++;
                     });
                 }
             }
         }
+
+        document.getElementById('totalDeceased').textContent = totalDeceased;
     } catch (error) {
         console.error('Error loading deceased records:', error);
     }
@@ -314,20 +482,28 @@ async function loadPaymentData() {
     }
 }
 
+function updateStatistics() {
+    const vacant = allPlots.filter(p => p.status === 'Vacant').length;
+    const occupied = allPlots.filter(p => p.status === 'Occupied').length;
+
+    document.getElementById('totalPlots').textContent = allPlots.length;
+    document.getElementById('vacantPlots').textContent = vacant;
+    document.getElementById('occupiedPlots').textContent = occupied;
+}
+
 function renderCemeteryMap() {
     userRole = currentUser ? currentUser.role : 'Engineer';
 
     // Update view mode badge
-    document.getElementById('viewModeBadge').textContent = `${userRole} View`;
+    document.getElementById('viewModeBadge').innerHTML =
+        `<i class="fas fa-user"></i> ${userRole} View`;
 
     // Show appropriate legend
     if (userRole === 'Treasurer') {
-        document.getElementById('treasurerLegend').style.display = 'flex';
-        document.getElementById('treasurerLegend').style.gap = '20px';
+        document.getElementById('treasurerLegend').style.display = 'block';
         document.getElementById('engineerLegend').style.display = 'none';
     } else {
-        document.getElementById('engineerLegend').style.display = 'flex';
-        document.getElementById('engineerLegend').style.gap = '20px';
+        document.getElementById('engineerLegend').style.display = 'block';
         document.getElementById('treasurerLegend').style.display = 'none';
     }
 
@@ -358,15 +534,13 @@ function renderCemeteryMap() {
     // Build the map HTML
     let html = '<div class="all-blocks" id="allBlocks">';
 
-    // PHASE 3: AA + Unnamed block (always show these)
+    // PHASE 3: AA + Unnamed block
     html += renderBlockColumn('AA', 'Phase 3', findPlot, 20);
     html += renderBlockColumn('', 'Phase 3', findPlot, 10);
 
-    // Divider
     html += '<div class="phase-divider"></div>';
 
-    // PHASE 2: Blocks T-Z (always show all)
-    const phase2AllBlocks = ['Z', 'Y', 'X', 'W', 'V', 'U', 'T'];
+    // PHASE 2: Blocks T-Z
     const phase2Groups = [['Z', 'Y'], ['X', 'W'], ['V', 'U'], ['T']];
 
     phase2Groups.forEach((group, gi) => {
@@ -376,10 +550,9 @@ function renderCemeteryMap() {
         });
     });
 
-    // Divider
     html += '<div class="phase-divider"></div>';
 
-    // PHASE 1: Blocks A-I (always show all)
+    // PHASE 1: Blocks A-I
     const phase1Groups = [['I', 'H'], ['G', 'F'], ['E', 'D'], ['C', 'B'], ['A']];
 
     phase1Groups.forEach((group, gi) => {
@@ -413,14 +586,16 @@ function renderBlockColumn(blockName, phaseName, findPlot, lotsCount = 20) {
     html += `<div class="block-label">${blockName || '&nbsp;'}</div>`;
     html += '<div class="plots-stack">';
 
-    // Render from bottom to top (lot lotsCount at top, lot 1 at bottom)
+    // Render from bottom to top
     for (let lot = lotsCount; lot >= 1; lot--) {
         const plot = findPlot(blockName, lot, phaseName);
         const colorClass = plot ? getPlotColorClass(plot) : 'vacant';
-        const plotId = plot ? plot.plot_id : 'null';
+        const plotId = plot ? plot.plot_id : null;
+        const displayBlock = blockName || 'Unnamed';
+
         const tooltip = plot ?
             `Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot} - ${plot.status}` :
-            `Block ${blockName || 'Unnamed'}, Lot ${lot} - Vacant`;
+            `Block ${displayBlock}, Lot ${lot} - Vacant`;
 
         html += `
             <div class="lot-box ${colorClass}"
@@ -453,7 +628,7 @@ function getPlotColorClass(plot) {
 }
 
 async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
-    if (plotId === 'null' || !plotId) {
+    if (!plotId || plotId === null) {
         const displayBlock = blockName || 'Unnamed';
         document.getElementById('modalTitle').textContent = `Plot: Block ${displayBlock}, Lot ${lotNumber}`;
         document.getElementById('plotModalContent').innerHTML = `
@@ -492,7 +667,7 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             if (data.deceased_records && data.deceased_records.length > 0) {
                 content += '<hr><h6><strong>Deceased Records:</strong></h6>';
                 content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                content += '<thead><tr><th>Name</th><th>Date of Death</th><th>Contact</th></tr></thead><tbody>';
+                content += '<thead><tr><th>Name</th><th>Date of Death</th><th>Contact</th><th>Action</th></tr></thead><tbody>';
 
                 data.deceased_records.forEach(record => {
                     content += `
@@ -500,20 +675,18 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                             <td><strong>${record.full_name}</strong></td>
                             <td>${formatDate(record.date_of_death)}</td>
                             <td>${record.contact_person || 'N/A'}<br><small>${record.contact_number || ''}</small></td>
+                            <td>
+                                <a href="edit_burial_record.php?id=${record.deceased_id}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
                         </tr>
                     `;
                 });
 
                 content += '</tbody></table></div>';
-
-                // Show edit button with first deceased ID
-                const firstDeceasedId = data.deceased_records[0].deceased_id;
-                const editBtn = document.getElementById('editBtn');
-                editBtn.href = `edit_burial_record.php?id=${firstDeceasedId}`;
-                editBtn.style.display = 'inline-block';
             } else {
                 content += '<hr><p class="text-muted text-center">No deceased records</p>';
-                document.getElementById('editBtn').style.display = 'none';
             }
 
             document.getElementById('plotModalContent').innerHTML = content;
@@ -526,73 +699,72 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
     }
 }
 
-function scaleMap() {
-    const outer = document.getElementById('mapOuter');
-    const scaler = document.getElementById('mapScaler');
-    const inner = document.getElementById('mapInner');
+// Live Search Functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.trim();
 
-    if (!outer || !scaler || !inner) return;
+    clearTimeout(searchTimeout);
 
-    // Reset scale
-    scaler.style.transform = 'scale(1)';
-
-    const availW = outer.clientWidth - 40;
-    const availH = outer.clientHeight - 40;
-    const natW = inner.scrollWidth;
-    const natH = inner.scrollHeight;
-
-    const scale = Math.min(availW / natW, availH / natH, 1);
-    scaler.style.transform = `scale(${scale})`;
-}
-
-function searchDeceased() {
-    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-
-    if (!searchTerm) {
-        showToast('warning', 'Search', 'Please enter a name to search');
+    if (searchTerm.length < 2) {
+        hideSearchResults();
         return;
     }
 
-    const results = allDeceasedRecords.filter(record =>
-        record.full_name.toLowerCase().includes(searchTerm)
-    );
+    searchTimeout = setTimeout(() => {
+        performLiveSearch(searchTerm);
+    }, 300);
+});
+
+async function performLiveSearch(searchTerm) {
+    try {
+        const response = await fetch(`/api/search_deceased.php?q=${encodeURIComponent(searchTerm)}`);
+        const data = await response.json();
+
+        if (data.success) {
+            displaySearchResults(data.results);
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
+
+function displaySearchResults(results) {
+    const resultsContainer = document.getElementById('searchResults');
 
     if (results.length === 0) {
-        showToast('info', 'No Results', 'No deceased found with that name');
+        resultsContainer.innerHTML = '<div class="no-results">No deceased found</div>';
+        resultsContainer.classList.add('active');
         return;
     }
 
-    if (results.length === 1) {
-        // Direct to plot
-        viewPlotDetails(results[0].plot_id, results[0].block, results[0].lot, 'Phase ' + results[0].phase);
-        highlightPlot(results[0].block, results[0].lot);
-    } else {
-        // Show list to choose from
-        let html = '<div class="list-group">';
-        results.forEach(record => {
-            html += `
-                <a href="#" class="list-group-item list-group-item-action"
-                   onclick="viewPlotDetails(${record.plot_id}, '${record.block}', ${record.lot}, 'Phase ${record.phase}'); highlightPlot('${record.block}', ${record.lot}); return false;">
-                    <strong>${record.full_name}</strong><br>
-                    <small>Block ${record.block}, Section ${record.section}, Lot ${record.lot}</small><br>
-                    <small class="text-muted">Died: ${formatDate(record.date_of_death)}</small>
-                </a>
-            `;
-        });
-        html += '</div>';
+    let html = '';
+    results.forEach(record => {
+        html += `
+            <div class="search-result-item" onclick="selectSearchResult(${record.plot_id}, '${record.block}', ${record.lot})">
+                <div class="search-result-name">${record.full_name}</div>
+                <div class="search-result-location">
+                    <i class="fas fa-map-marker-alt"></i> Block ${record.block}, Section ${record.section}, Lot ${record.lot}
+                </div>
+                <div class="search-result-dates">
+                    <i class="fas fa-calendar"></i> ${formatDate(record.date_of_death)}
+                </div>
+            </div>
+        `;
+    });
 
-        Swal.fire({
-            title: `Found ${results.length} Results`,
-            html: html,
-            width: '500px',
-            confirmButtonColor: '#1e3a8a'
-        });
-    }
+    resultsContainer.innerHTML = html;
+    resultsContainer.classList.add('active');
 }
 
-function clearSearch() {
+function selectSearchResult(plotId, block, lot) {
+    hideSearchResults();
     document.getElementById('searchInput').value = '';
-    removeHighlight();
+    viewPlotDetails(plotId, block, lot, '');
+    highlightPlot(block, lot);
+}
+
+function hideSearchResults() {
+    document.getElementById('searchResults').classList.remove('active');
 }
 
 function highlightPlot(block, lot) {
@@ -616,6 +788,31 @@ function removeHighlight() {
     });
 }
 
+function scaleMap() {
+    const outer = document.getElementById('mapContainer');
+    const scaler = document.getElementById('mapScaler');
+    const inner = document.getElementById('mapInner');
+
+    if (!outer || !scaler || !inner) return;
+
+    scaler.style.transform = 'scale(1)';
+
+    const availW = outer.clientWidth - 40;
+    const availH = outer.clientHeight - 40;
+    const natW = inner.scrollWidth;
+    const natH = inner.scrollHeight;
+
+    const scale = Math.min(availW / natW, availH / natH, 1);
+    scaler.style.transform = `scale(${scale})`;
+}
+
+// Click outside to close search results
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-box')) {
+        hideSearchResults();
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
@@ -623,12 +820,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 
     window.addEventListener('resize', scaleMap);
-
-    // Allow search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchDeceased();
-        }
-    });
 });
 </script>

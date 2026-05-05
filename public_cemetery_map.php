@@ -341,6 +341,25 @@
             background: linear-gradient(135deg, #64748b, #475569);
             border-color: #334155;
         }
+
+        /* Live Search Results Scrollbar */
+        #liveSearchResults::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #liveSearchResults::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        #liveSearchResults::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        #liveSearchResults::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -358,14 +377,15 @@
         <div class="container-fluid">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="searchInput" placeholder="Search by name...">
+                    <div class="input-group" style="position: relative;">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Start typing to search by name..." autocomplete="off">
                         <button class="btn btn-primary" onclick="searchDeceased()">
                             <i class="fas fa-search"></i> Search
                         </button>
                         <button class="btn btn-secondary" onclick="clearSearch()">
                             <i class="fas fa-times"></i> Clear
                         </button>
+                        <div id="liveSearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e2e8f0; border-radius: 0 0 8px 8px; margin-top: 2px; max-height: 300px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; display: none;"></div>
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
@@ -544,8 +564,10 @@
             for (let lot = lotsCount; lot >= 1; lot--) {
                 const plot = findPlot(blockName, lot, phaseName);
                 const isOccupied = plot && plot.status === 'Occupied';
-                const plotId = plot ? plot.plot_id : null;
+                const plotId = plot ? plot.plot_id : 'null';
                 const displayBlock = blockName || 'Unnamed';
+                const safeBlockName = (blockName || '').replace(/'/g, "\\'");
+                const safePhaseName = phaseName.replace(/'/g, "\\'");
 
                 let tooltip = '';
                 if (plot) {
@@ -560,7 +582,7 @@
                 html += `
                     <div class="lot-box ${isOccupied ? 'occupied' : ''}"
                          title="${tooltip}"
-                         onclick="viewPlotDetails(${plotId}, '${blockName}', ${lot}, '${phaseName}')">
+                         onclick="viewPlotDetails('${plotId}', '${safeBlockName}', ${lot}, '${safePhaseName}')">
                         ${lot}
                     </div>
                 `;
@@ -571,7 +593,7 @@
         }
 
         async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
-            if (!plotId || plotId === null) {
+            if (!plotId || plotId === null || plotId === 'null') {
                 const displayBlock = blockName || 'Unnamed';
                 document.getElementById('modalTitle').innerHTML =
                     `<i class="fas fa-map-marker-alt"></i> Block ${displayBlock}, Lot ${lotNumber}`;
@@ -764,6 +786,86 @@
             scaler.style.transform = `scale(${scale})`;
         }
 
+        // Live Search Implementation
+        let searchTimeout = null;
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            if (searchTerm.length < 2) {
+                hideLiveSearch();
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                performLiveSearchPublic(searchTerm);
+            }, 300);
+        });
+
+        async function performLiveSearchPublic(searchTerm) {
+            const results = allDeceasedRecords.filter(record =>
+                record.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            displayLiveSearchResults(results);
+        }
+
+        function displayLiveSearchResults(results) {
+            const resultsContainer = document.getElementById('liveSearchResults');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #94a3b8;">No deceased found</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            results.slice(0, 10).forEach(record => {
+                html += `
+                    <div style="padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;"
+                         onmouseover="this.style.background='#f8fafc'"
+                         onmouseout="this.style.background='white'"
+                         onclick="selectLiveResult(${record.plot_id}, '${record.block}', ${record.lot})">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-user-circle" style="font-size: 24px; color: #64748b;"></i>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #1e3a8a; font-size: 14px;">${record.full_name}</div>
+                                <div style="font-size: 12px; color: #64748b;">
+                                    <i class="fas fa-map-marker-alt"></i> Block ${record.block}, Section ${record.section}, Lot ${record.lot}
+                                </div>
+                                <div style="font-size: 11px; color: #94a3b8;">
+                                    <i class="fas fa-calendar"></i> ${formatDate(record.date_of_death)}
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.style.display = 'block';
+        }
+
+        function selectLiveResult(plotId, block, lot) {
+            hideLiveSearch();
+            document.getElementById('searchInput').value = '';
+            viewPlotDetails(plotId.toString(), block, lot, '');
+            highlightPlot(block, lot);
+        }
+
+        function hideLiveSearch() {
+            document.getElementById('liveSearchResults').style.display = 'none';
+        }
+
+        // Click outside to close live search
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.input-group')) {
+                hideLiveSearch();
+            }
+        });
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadCemeteryMap();
@@ -771,6 +873,7 @@
 
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     searchDeceased();
                 }
             });
