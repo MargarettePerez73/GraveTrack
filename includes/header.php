@@ -20,7 +20,7 @@
         <div class="container-fluid">
             <!-- Brand -->
             <a class="navbar-brand" href="dashboard.php">
-                <i class="fas fa-monument"></i>
+                <img src="img/municipal_logo.png" alt="Municipality of Tuy" style="width: 30px; height: 30px;">
                 GraveTrack
             </a>
 
@@ -30,8 +30,8 @@
             </button>
 
             <!-- Navigation Links -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link <?php echo ($currentPage == 'dashboard') ? 'active' : ''; ?>" href="dashboard.php">
                             <i class="fas fa-home"></i> Dashboard
@@ -58,9 +58,11 @@
                         </a>
                     </li>
                 </ul>
+            </div>
 
-                <!-- Logout Button -->
-                <button class="btn btn-logout ms-3" onclick="logout()">
+            <!-- Logout Button -->
+            <div class="ms-3">
+                <button class="btn btn-logout" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
@@ -68,7 +70,7 @@
     </nav>
 
     <!-- Global Loading Spinner -->
-    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
         <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
