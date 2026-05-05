@@ -308,7 +308,7 @@ include 'includes/header.php';
 
         <div class="sidebar-section">
             <h6><i class="fas fa-bolt"></i> Actions</h6>
-            <a href="adding_burial_records.php" class="action-btn">
+            <a href="adding_burial_records.php" class="action-btn" id="addRecordActionBtn">
                 <i class="fas fa-plus"></i> Add New Record
             </a>
             <a href="cemetery_map.php" class="action-btn">
@@ -321,7 +321,7 @@ include 'includes/header.php';
     <div class="records-main">
         <div class="page-header">
             <h1><i class="fas fa-book"></i> Burial Records</h1>
-            <a href="adding_burial_records.php" class="add-record-btn">
+            <a href="adding_burial_records.php" class="add-record-btn" id="addRecordHeaderBtn">
                 <i class="fas fa-plus"></i> Add New Record
             </a>
         </div>
@@ -412,6 +412,8 @@ include 'includes/header.php';
         const tbody = document.getElementById('recordsTableBody');
         tbody.innerHTML = '';
 
+        const canEdit = currentUser && currentUser.role === 'Engineer';
+
         if (records.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: #94a3b8;">No records found</td></tr>';
             document.getElementById('recordCount').textContent = '0 records';
@@ -419,6 +421,14 @@ include 'includes/header.php';
         }
 
         records.forEach(record => {
+            const actionCell = canEdit
+                ? `
+                        <a href="edit_burial_record.php?id=${record.deceased_id}" class="edit-btn">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                  `
+                : `<span class="text-muted">View only</span>`;
+
             const row = `
                 <tr>
                     <td class="name-cell">${record.full_name}</td>
@@ -429,9 +439,7 @@ include 'includes/header.php';
                     <td>${record.contact_person || 'N/A'}</td>
                     <td>${record.contact_number || 'N/A'}</td>
                     <td>
-                        <a href="edit_burial_record.php?id=${record.deceased_id}" class="edit-btn">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
+                        ${actionCell}
                     </td>
                 </tr>
             `;
@@ -471,6 +479,14 @@ include 'includes/header.php';
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             loadBurialRecords();
+
+            // Hide "Add New Record" for Treasurer
+            if (currentUser && currentUser.role !== 'Engineer') {
+                const sidebarBtn = document.getElementById('addRecordActionBtn');
+                const headerBtn = document.getElementById('addRecordHeaderBtn');
+                if (sidebarBtn) sidebarBtn.style.display = 'none';
+                if (headerBtn) headerBtn.style.display = 'none';
+            }
         }, 500);
     });
 </script>

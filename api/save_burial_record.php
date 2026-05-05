@@ -1,6 +1,18 @@
 <?php
 header('Content-Type: application/json');
 require_once '../Database/db_connector.php';
+session_start();
+
+// Only Engineers can add burial records
+$userRole = isset($_SESSION['role']) ? $_SESSION['role'] : null;
+if ($userRole !== 'Engineer') {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Only engineers can add burial records'
+    ]);
+    exit;
+}
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);

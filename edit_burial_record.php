@@ -1,6 +1,11 @@
 <?php
 $pageTitle = 'Edit Burial Record';
 $currentPage = 'burial_records';
+session_start();
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Engineer') {
+    header('Location: burial_records.php');
+    exit;
+}
 include 'includes/header.php';
 ?>
 
