@@ -1,9 +1,26 @@
 <?php
 header('Content-Type: application/json');
 require_once '../Database/db_connector.php';
+session_start();
+
+// Check if user is Engineer
+$userRole = isset($_SESSION['role']) ? $_SESSION['role'] : null;
+if ($userRole !== 'Engineer') {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Only engineers can delete burial records'
+    ]);
+    exit;
+}
 
 try {
-    $data = json_decode(file_get_contents('php://input'), true);
+    // Handle DELETE, POST methods
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        $data = json_decode(file_get_contents('php://input'), true);
+    } else {
+        $data = $_POST;
+    }
 
     if (empty($data['deceased_id'])) {
         throw new Exception("Deceased ID is required");
@@ -20,6 +37,11 @@ try {
     $getPlotStmt->bindParam(':deceased_id', $data['deceased_id']);
     $getPlotStmt->execute();
     $deceased = $getPlotStmt->fetch();
+    
+    if (!$deceased) {
+        throw new Exception("Deceased record not found");
+    }
+    
     $plot_id = $deceased['plot_id'];
 
     // Delete deceased record (cascade will handle contacts, rentals, payments)
@@ -36,7 +58,7 @@ try {
     $result = $checkStmt->fetch();
 
     // If no more deceased, mark plot as vacant
-    if ($result['count'] == 0) {
+    if ($result['count'] == 0 && $plot_id) {
         $updatePlotQuery = "UPDATE plots SET status = 'Vacant' WHERE plot_id = :plot_id";
         $updatePlotStmt = $db->prepare($updatePlotQuery);
         $updatePlotStmt->bindParam(':plot_id', $plot_id);

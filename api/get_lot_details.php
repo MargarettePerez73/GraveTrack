@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once '../Database/db_connector.php';
+session_start();
 
 try {
     $plot_id = isset($_GET['plot_id']) ? intval($_GET['plot_id']) : 0;
@@ -11,6 +12,9 @@ try {
 
     $database = new db_connector();
     $db = $database->connect();
+
+    // Get current user role from session
+    $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : 'Engineer';
 
     // Get plot information
     $plotQuery = "SELECT * FROM plots WHERE plot_id = :plot_id";
@@ -27,7 +31,7 @@ try {
     $deceasedQuery = "SELECT
                         d.deceased_id,
                         d.full_name,
-                        d.date_of_birth as birth_date,
+                        d.birth_date,
                         d.date_of_death,
                         d.date_of_burial,
                         d.gender,
@@ -78,7 +82,8 @@ try {
         'success' => true,
         'plot' => $plot,
         'deceased_records' => $deceased_records,
-        'html' => $html
+        'html' => $html,
+        'userRole' => $userRole
     ]);
 
 } catch (Exception $e) {
