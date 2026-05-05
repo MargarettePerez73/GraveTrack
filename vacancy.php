@@ -4,83 +4,342 @@ $currentPage = 'vacancy';
 include 'includes/header.php';
 ?>
 
-<div class="dashboard-container">
-    <!-- Page Title -->
-    <h1 class="page-title">
-        <i class="fas fa-map-marked-alt"></i>
-        Vacancy Monitoring
-    </h1>
+<style>
+    .vacancy-layout {
+        display: flex;
+        height: calc(100vh - 60px);
+        overflow: hidden;
+    }
 
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="stat-card vacant">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-number" id="vacantCount">0</div>
-                <div class="stat-label">Vacant Plots</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card occupied">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-number" id="occupiedCount">0</div>
-                <div class="stat-label">Occupied Plots</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card total">
-                <div class="stat-icon"><i class="fas fa-th"></i></div>
-                <div class="stat-number" id="totalCount">0</div>
-                <div class="stat-label">Total Plots</div>
-            </div>
-        </div>
-    </div>
+    .vacancy-sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
 
-    <!-- Filters -->
-    <div class="search-filter-section">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label"><strong>Block</strong></label>
-                <select class="form-control" id="filterBlock" onchange="applyFilters()">
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header h4 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+
+    .sidebar-section {
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-section h6 {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+    }
+
+    .sidebar-stat {
+        background: rgba(255,255,255,0.15);
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .sidebar-stat-label {
+        font-size: 10px;
+        opacity: 0.9;
+        margin-bottom: 3px;
+    }
+
+    .sidebar-stat-value {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .filter-group {
+        margin-bottom: 12px;
+    }
+
+    .filter-label {
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+        opacity: 0.9;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 2px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .filter-input option {
+        background: #059669;
+        color: white;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        background: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+    }
+
+    .vacancy-main {
+        flex: 1;
+        overflow-y: auto;
+        background: #f8fafc;
+        padding: 20px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-header h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: #1e3a8a;
+        margin: 0;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card-compact {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid;
+    }
+
+    .stat-card-compact.vacant { border-left-color: #10b981; }
+    .stat-card-compact.occupied { border-left-color: #ef4444; }
+    .stat-card-compact.total { border-left-color: #3b82f6; }
+
+    .stat-card-compact h6 {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin: 0 0 8px 0;
+    }
+
+    .stat-card-compact .value {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e3a8a;
+    }
+
+    .content-card-compact {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+        height: calc(100vh - 260px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .content-card-header {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f8fafc, #ffffff);
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .content-card-header h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e3a8a;
+    }
+
+    .content-card-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .compact-table {
+        width: 100%;
+        font-size: 12px;
+    }
+
+    .compact-table thead th {
+        background: #f8fafc;
+        color: #1e3a8a;
+        font-weight: 700;
+        padding: 10px 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .compact-table tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.2s;
+    }
+
+    .compact-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .compact-table tbody td {
+        padding: 10px 8px;
+        color: #334155;
+    }
+
+    .record-count-badge {
+        background: #dbeafe;
+        color: #1e3a8a;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .btn-view {
+        padding: 5px 12px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-clear {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 8px;
+        border-radius: 6px;
+        width: 100%;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn-clear:hover {
+        background: rgba(255,255,255,0.3);
+    }
+</style>
+
+<div class="vacancy-layout">
+    <!-- Sidebar -->
+    <div class="vacancy-sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-map-marked-alt"></i> Vacancy Monitoring</h4>
+        </div>
+
+        <div class="sidebar-section">
+            <h6>Statistics</h6>
+            <div class="sidebar-stat">
+                <div class="sidebar-stat-label">Vacant Plots</div>
+                <div class="sidebar-stat-value" id="sidebarVacant">0</div>
+            </div>
+            <div class="sidebar-stat">
+                <div class="sidebar-stat-label">Occupied Plots</div>
+                <div class="sidebar-stat-value" id="sidebarOccupied">0</div>
+            </div>
+            <div class="sidebar-stat">
+                <div class="sidebar-stat-label">Total Plots</div>
+                <div class="sidebar-stat-value" id="sidebarTotal">0</div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h6>Filters</h6>
+            <div class="filter-group">
+                <label class="filter-label">Block</label>
+                <select class="filter-input" id="filterBlock" onchange="applyFilters()">
                     <option value="">All Blocks</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label"><strong>Type</strong></label>
-                <select class="form-control" id="filterType" onchange="applyFilters()">
+
+            <div class="filter-group">
+                <label class="filter-label">Type</label>
+                <select class="filter-input" id="filterType" onchange="applyFilters()">
                     <option value="">All Types</option>
                     <option value="Single">Single</option>
                     <option value="Apartment">Apartment</option>
                     <option value="Mausoleum">Mausoleum</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label"><strong>Status</strong></label>
-                <select class="form-control" id="filterStatus" onchange="applyFilters()">
+
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-input" id="filterStatus" onchange="applyFilters()">
                     <option value="">All Status</option>
                     <option value="Vacant">Vacant</option>
                     <option value="Occupied">Occupied</option>
                     <option value="Reserved">Reserved</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label"><strong>&nbsp;</strong></label>
-                <button class="btn btn-secondary w-100" onclick="clearFilters()">
-                    <i class="fas fa-redo"></i> Clear Filters
-                </button>
-            </div>
+
+            <button class="btn-clear" onclick="clearFilters()">
+                <i class="fas fa-redo"></i> Clear Filters
+            </button>
         </div>
     </div>
 
-    <!-- Plots Table -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-table"></i> Plot Listing</span>
-            <span id="recordCount" class="badge bg-light text-dark">0 records</span>
+    <!-- Main Content -->
+    <div class="vacancy-main">
+        <div class="page-header">
+            <h1><i class="fas fa-chart-bar"></i> Plot Availability</h1>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" id="plotsTable">
+
+        <!-- Stats Cards -->
+        <div class="stats-row">
+            <div class="stat-card-compact vacant">
+                <h6>Vacant Plots</h6>
+                <div class="value" id="vacantCount">0</div>
+            </div>
+            <div class="stat-card-compact occupied">
+                <h6>Occupied Plots</h6>
+                <div class="value" id="occupiedCount">0</div>
+            </div>
+            <div class="stat-card-compact total">
+                <h6>Total Plots</h6>
+                <div class="value" id="totalCount">0</div>
+            </div>
+        </div>
+
+        <!-- Plots Table -->
+        <div class="content-card-compact">
+            <div class="content-card-header">
+                <h5><i class="fas fa-table"></i> Plot Listing</h5>
+                <span class="record-count-badge" id="recordCount">0 records</span>
+            </div>
+            <div class="content-card-body">
+                <table class="compact-table">
                     <thead>
                         <tr>
                             <th>Plot ID</th>
@@ -95,9 +354,9 @@ include 'includes/header.php';
                     </thead>
                     <tbody id="plotsTableBody">
                         <tr>
-                            <td colspan="8" class="text-center">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                                Loading plots...
+                            <td colspan="8" class="text-center" style="padding: 30px;">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2" style="color: #64748b;">Loading plots...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -115,9 +374,7 @@ include 'includes/header.php';
                 <h5 class="modal-title"><i class="fas fa-info-circle"></i> Plot Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="plotDetailsContent">
-                Loading...
-            </div>
+            <div class="modal-body" id="plotDetailsContent">Loading...</div>
         </div>
     </div>
 </div>
@@ -142,6 +399,10 @@ include 'includes/header.php';
                 document.getElementById('occupiedCount').textContent = data.stats.total_occupied;
                 document.getElementById('totalCount').textContent = data.stats.total_plots;
 
+                document.getElementById('sidebarVacant').textContent = data.stats.total_vacant;
+                document.getElementById('sidebarOccupied').textContent = data.stats.total_occupied;
+                document.getElementById('sidebarTotal').textContent = data.stats.total_plots;
+
                 // Populate block filter
                 const blockFilter = document.getElementById('filterBlock');
                 blocks.forEach(block => {
@@ -151,12 +412,12 @@ include 'includes/header.php';
                     blockFilter.appendChild(option);
                 });
 
-                // Display plots
                 displayPlots(allPlots);
             }
         } catch (error) {
             console.error('Error loading vacancy data:', error);
-            document.getElementById('plotsTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading data</td></tr>';
+            document.getElementById('plotsTableBody').innerHTML =
+                '<tr><td colspan="8" class="text-center text-danger">Error loading data</td></tr>';
         }
     }
 
@@ -165,7 +426,7 @@ include 'includes/header.php';
         tbody.innerHTML = '';
 
         if (plots.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No plots found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 30px; color: #94a3b8;">No plots found</td></tr>';
             document.getElementById('recordCount').textContent = '0 records';
             return;
         }
@@ -181,7 +442,7 @@ include 'includes/header.php';
                     <td>${getStatusBadge(plot.status)}</td>
                     <td>${formatDate(plot.date_added)}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewPlotDetails(${plot.plot_id})">
+                        <button class="btn-view" onclick="viewPlotDetails(${plot.plot_id})">
                             <i class="fas fa-eye"></i> View
                         </button>
                     </td>
@@ -235,7 +496,6 @@ include 'includes/header.php';
         }
     }
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             loadVacancyData();

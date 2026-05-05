@@ -168,11 +168,35 @@ include 'includes/header.php';
                     option.value = plot.plot_id;
                     option.textContent = plot.label + ` (${plot.type})`;
                     option.dataset.type = plot.type;
+                    option.dataset.block = plot.block;
+                    option.dataset.lot = plot.lot;
                     select.appendChild(option);
                 });
+
+                // Pre-select plot if block and lot are in URL
+                preselectPlotFromURL();
             }
         } catch (error) {
             console.error('Error loading vacant plots:', error);
+        }
+    }
+
+    function preselectPlotFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const block = urlParams.get('block');
+        const lot = urlParams.get('lot');
+
+        if (block && lot) {
+            const select = document.getElementById('plot_id');
+            for (let i = 0; i < select.options.length; i++) {
+                const option = select.options[i];
+                if (option.dataset.block === block && option.dataset.lot === lot) {
+                    select.value = option.value;
+                    showPlotInfo();
+                    showToast('info', 'Plot Selected', `Block ${block}, Lot ${lot} has been pre-selected`);
+                    break;
+                }
+            }
         }
     }
 

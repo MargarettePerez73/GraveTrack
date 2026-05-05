@@ -392,8 +392,16 @@ include 'includes/header.php';
             <div class="modal-body" id="plotModalContent">Loading...</div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Engineer: Add/Edit Burial Record -->
+                <a href="#" class="btn btn-success" id="addRecordBtn" style="display:none;">
+                    <i class="fas fa-plus"></i> Add Burial Record
+                </a>
                 <a href="#" class="btn btn-primary" id="editBtn" style="display:none;">
                     <i class="fas fa-edit"></i> Edit Record
+                </a>
+                <!-- Treasurer: Add Payment -->
+                <a href="#" class="btn btn-warning" id="addPaymentBtn" style="display:none;">
+                    <i class="fas fa-money-bill-wave"></i> Add Payment
                 </a>
             </div>
         </div>
@@ -628,6 +636,11 @@ function getPlotColorClass(plot) {
 }
 
 async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
+    // Hide all action buttons first
+    document.getElementById('editBtn').style.display = 'none';
+    document.getElementById('addRecordBtn').style.display = 'none';
+    document.getElementById('addPaymentBtn').style.display = 'none';
+
     if (!plotId || plotId === null) {
         const displayBlock = blockName || 'Unnamed';
         document.getElementById('modalTitle').textContent = `Plot: Block ${displayBlock}, Lot ${lotNumber}`;
@@ -637,7 +650,13 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                 <p>This plot is currently vacant and available for burial.</p>
             </div>
         `;
-        document.getElementById('editBtn').style.display = 'none';
+
+        // Engineer can add burial record for vacant plot
+        if (userRole === 'Engineer') {
+            const addBtn = document.getElementById('addRecordBtn');
+            addBtn.href = `adding_burial_records.php?block=${encodeURIComponent(displayBlock)}&lot=${lotNumber}`;
+            addBtn.style.display = 'inline-block';
+        }
 
         const modal = new bootstrap.Modal(document.getElementById('plotModal'));
         modal.show();
@@ -667,7 +686,14 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             if (data.deceased_records && data.deceased_records.length > 0) {
                 content += '<hr><h6><strong>Deceased Records:</strong></h6>';
                 content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                content += '<thead><tr><th>Name</th><th>Date of Death</th><th>Contact</th><th>Action</th></tr></thead><tbody>';
+                content += '<thead><tr><th>Name</th><th>Date of Death</th><th>Contact</th>';
+
+                // Add Action column only for Engineer
+                if (userRole === 'Engineer') {
+                    content += '<th>Action</th>';
+                }
+
+                content += '</tr></thead><tbody>';
 
                 data.deceased_records.forEach(record => {
                     content += `
@@ -675,16 +701,38 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                             <td><strong>${record.full_name}</strong></td>
                             <td>${formatDate(record.date_of_death)}</td>
                             <td>${record.contact_person || 'N/A'}<br><small>${record.contact_number || ''}</small></td>
+                    `;
+
+                    // Show edit button only for Engineer
+                    if (userRole === 'Engineer') {
+                        content += `
                             <td>
                                 <a href="edit_burial_record.php?id=${record.deceased_id}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                             </td>
-                        </tr>
-                    `;
+                        `;
+                    }
+
+                    content += '</tr>';
                 });
 
                 content += '</tbody></table></div>';
+
+                // Show appropriate action button in footer
+                if (userRole === 'Treasurer') {
+                    // Treasurer can add payment for first deceased
+                    const firstDeceasedId = data.deceased_records[0].deceased_id;
+                    const addPaymentBtn = document.getElementById('addPaymentBtn');
+                    addPaymentBtn.href = `add_payment.php?deceased_id=${firstDeceasedId}&plot_id=${plotId}`;
+                    addPaymentBtn.style.display = 'inline-block';
+                } else if (userRole === 'Engineer') {
+                    // Engineer can edit the first record
+                    const firstDeceasedId = data.deceased_records[0].deceased_id;
+                    const editBtn = document.getElementById('editBtn');
+                    editBtn.href = `edit_burial_record.php?id=${firstDeceasedId}`;
+                    editBtn.style.display = 'inline-block';
+                }
             } else {
                 content += '<hr><p class="text-muted text-center">No deceased records</p>';
             }
