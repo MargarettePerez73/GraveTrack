@@ -59,15 +59,6 @@
                     </li>
                 </ul>
 
-                <!-- User Info -->
-                <div class="user-info">
-                    <i class="fas fa-user-circle"></i>
-                    <div>
-                        <div id="userInfo">Loading...</div>
-                        <small id="userRole"></small>
-                    </div>
-                </div>
-
                 <!-- Logout Button -->
                 <button class="btn btn-logout ms-3" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout

@@ -258,6 +258,87 @@ include 'includes/header.php';
         background: #475569;
         transform: translateY(-2px);
     }
+
+    /* ── Plot Details Modal (compact cards) ── */
+    #plotDetailsModal .modal-header {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: #fff;
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+    #plotDetailsModal .modal-header .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    #plotDetailsModal .modal-title {
+        font-weight: 800;
+        font-size: 15px;
+    }
+    .vplot-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    @media (max-width: 576px) {
+        .vplot-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .vplot-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        min-width: 0;
+    }
+    .vplot-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .vplot-value {
+        font-size: 13px;
+        font-weight: 900;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .vdeceased-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    @media (max-width: 768px) {
+        .vdeceased-grid { grid-template-columns: 1fr; }
+    }
+    .vdeceased-name {
+        font-size: 13px;
+        font-weight: 900;
+        color: #0f172a;
+        margin: 0 0 6px;
+        line-height: 1.2;
+    }
+    .vdeceased-meta {
+        font-size: 12px;
+        color: #475569;
+        margin: 0;
+        line-height: 1.35;
+    }
+    .vdeceased-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .vdeceased-actions .btn {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
 </style>
 
 <div class="vacancy-layout">
@@ -509,13 +590,95 @@ include 'includes/header.php';
             const data = await response.json();
 
             if (data.success) {
-                document.getElementById('plotDetailsContent').innerHTML = data.html;
+                const plot = data.plot || {};
+                const deceased = Array.isArray(data.deceased_records) ? data.deceased_records : [];
+
+                const statusText = plot.status || 'Unknown';
+                const statusBadge = getStatusBadge(statusText);
+
+                let html = `
+                    <div class="vplot-meta-grid">
+                        <div class="vplot-card">
+                            <span class="vplot-label">Block</span>
+                            <div class="vplot-value">${plot.block ?? 'N/A'}</div>
+                        </div>
+                        <div class="vplot-card">
+                            <span class="vplot-label">Section</span>
+                            <div class="vplot-value">${plot.section ?? 'N/A'}</div>
+                        </div>
+                        <div class="vplot-card">
+                            <span class="vplot-label">Lot</span>
+                            <div class="vplot-value">${plot.lot ?? 'N/A'}</div>
+                        </div>
+                        <div class="vplot-card">
+                            <span class="vplot-label">Type</span>
+                            <div class="vplot-value">${plot.type ?? 'N/A'}</div>
+                        </div>
+                        <div class="vplot-card">
+                            <span class="vplot-label">Status</span>
+                            <div class="vplot-value">${stripHtml(statusBadge)}</div>
+                        </div>
+                        <div class="vplot-card">
+                            <span class="vplot-label">Date Added</span>
+                            <div class="vplot-value">${formatDate(plot.date_added)}</div>
+                        </div>
+                    </div>
+                `;
+
+                if (deceased.length > 0) {
+                    html += `
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="mb-0" style="font-weight:900;color:#1e3a8a;">
+                                <i class="fas fa-user me-2"></i>Deceased Records
+                            </h6>
+                            <span class="badge bg-primary">${deceased.length}</span>
+                        </div>
+                        <div class="vdeceased-grid">
+                    `;
+
+                    deceased.forEach(r => {
+                        const contact = r.contact_person ? `${r.contact_person}${r.contact_number ? ` (${r.contact_number})` : ''}` : 'N/A';
+                        html += `
+                            <div class="vplot-card">
+                                <div class="vdeceased-name">${r.full_name || 'Unnamed'}</div>
+                                <p class="vdeceased-meta">
+                                    <strong>Died:</strong> ${formatDate(r.date_of_death)}<br>
+                                    <strong>Buried:</strong> ${formatDate(r.date_of_burial)}<br>
+                                    <small><strong>Contact:</strong> ${contact}</small>
+                                </p>
+                                <div class="vdeceased-actions">
+                                    <a class="btn btn-outline-primary btn-sm"
+                                       href="burial_records.php?deceased_id=${r.deceased_id}">
+                                        <i class="fas fa-external-link-alt me-1"></i> See more
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                } else {
+                    html += `
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No burial records found for this plot.
+                        </div>
+                    `;
+                }
+
+                document.getElementById('plotDetailsContent').innerHTML = html;
                 const modal = new bootstrap.Modal(document.getElementById('plotDetailsModal'));
                 modal.show();
             }
         } catch (error) {
             console.error('Error loading plot details:', error);
         }
+    }
+
+    function stripHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html || '';
+        return div.textContent || div.innerText || '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {

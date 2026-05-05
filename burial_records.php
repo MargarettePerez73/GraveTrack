@@ -363,6 +363,28 @@ include 'includes/header.php';
 
 <?php include 'includes/footer.php'; ?>
 
+<!-- Record Details Modal (for deep links) -->
+<div class="modal fade" id="recordDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
+                <h5 class="modal-title" id="recordDetailsTitle" style="font-weight: 800; font-size: 15px;">
+                    <i class="fas fa-user me-2"></i> Burial Record Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
+            </div>
+            <div class="modal-body" id="recordDetailsBody">Loading...</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="recordDetailsEditBtn" style="display:none;">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let allRecords = [];
 
@@ -487,6 +509,68 @@ include 'includes/header.php';
                 if (sidebarBtn) sidebarBtn.style.display = 'none';
                 if (headerBtn) headerBtn.style.display = 'none';
             }
+
+            // Deep-link: open record details modal if deceased_id is present
+            const params = new URLSearchParams(window.location.search);
+            const deepId = params.get('deceased_id') || params.get('id');
+            if (deepId) {
+                setTimeout(() => openRecordDetailsModal(parseInt(deepId, 10)), 900);
+            }
         }, 500);
     });
+
+    function openRecordDetailsModal(deceasedId) {
+        if (!deceasedId || !Array.isArray(allRecords)) return;
+
+        const record = allRecords.find(r => String(r.deceased_id) === String(deceasedId));
+        if (!record) return;
+
+        const canEdit = currentUser && currentUser.role === 'Engineer';
+
+        document.getElementById('recordDetailsTitle').innerHTML =
+            `<i class="fas fa-user me-2"></i> ${record.full_name}`;
+
+        const body = `
+            <div style="display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px;">
+                <div class="card" style="margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Plot</div>
+                    <div style="font-size:13px;font-weight:900;color:#0f172a;">${record.plot_location}</div>
+                </div>
+                <div class="card" style="margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Burial Type</div>
+                    <div style="font-size:13px;font-weight:900;color:#0f172a;">${record.burial_type || 'N/A'}</div>
+                </div>
+                <div class="card" style="margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Date of Death</div>
+                    <div style="font-size:13px;font-weight:900;color:#0f172a;">${formatDate(record.date_of_death)}</div>
+                </div>
+                <div class="card" style="margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Date of Burial</div>
+                    <div style="font-size:13px;font-weight:900;color:#0f172a;">${formatDate(record.date_of_burial)}</div>
+                </div>
+                <div class="card" style="grid-column: 1 / -1; margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Contact</div>
+                    <div style="font-size:13px;font-weight:900;color:#0f172a;">
+                        ${record.contact_person || 'N/A'} ${record.contact_number ? `(${record.contact_number})` : ''}
+                    </div>
+                </div>
+                <div class="card" style="grid-column: 1 / -1; margin:0; padding:12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.35px;">Address</div>
+                    <div style="font-size:13px;font-weight:800;color:#0f172a;">${record.address || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('recordDetailsBody').innerHTML = body;
+
+        const editBtn = document.getElementById('recordDetailsEditBtn');
+        if (canEdit) {
+            editBtn.href = `edit_burial_record.php?id=${record.deceased_id}`;
+            editBtn.style.display = 'inline-block';
+        } else {
+            editBtn.style.display = 'none';
+        }
+
+        new bootstrap.Modal(document.getElementById('recordDetailsModal')).show();
+    }
 </script>
