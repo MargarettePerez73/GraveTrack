@@ -21,6 +21,110 @@ include 'includes/header.php';
         overflow-y: auto;
     }
 
+    /* ── Plot Details Modal (compact cards) ── */
+    #plotModal .modal-header {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: white;
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+    #plotModal .modal-header .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    #plotModal .modal-title {
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 0.2px;
+    }
+    .plot-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    @media (max-width: 576px) {
+        .plot-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .plot-mini-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 10px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        min-width: 0;
+    }
+    .plot-mini-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 3px;
+        display: block;
+    }
+    .plot-mini-value {
+        font-size: 13px;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .plot-section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 12px 0 8px;
+    }
+    .plot-section-title h6 {
+        margin: 0;
+        font-weight: 800;
+        color: #1e3a8a;
+        font-size: 13px;
+        letter-spacing: 0.2px;
+    }
+    .deceased-cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    @media (max-width: 768px) {
+        .deceased-cards { grid-template-columns: 1fr; }
+    }
+    .deceased-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+    }
+    .deceased-name {
+        font-weight: 900;
+        color: #0f172a;
+        font-size: 13px;
+        line-height: 1.2;
+        margin: 0 0 6px;
+    }
+    .deceased-meta {
+        font-size: 12px;
+        color: #475569;
+        margin: 0;
+        line-height: 1.35;
+    }
+    .deceased-meta small { color: #64748b; }
+    .deceased-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .deceased-actions .btn {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
     .cemetery-layout {
         display: flex;
         height: calc(100vh - 60px);
@@ -871,48 +975,86 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
         document.getElementById('modalTitle').textContent =
             `Plot: Block ${data.plot.block}, Section ${data.plot.section}, Lot ${data.plot.lot}`;
 
+        const phaseText = phaseName || data.plot.phase || 'N/A';
+
+        const metaCards = `
+            <div class="plot-meta-grid">
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Block</span>
+                    <div class="plot-mini-value">${data.plot.block ?? 'N/A'}</div>
+                </div>
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Section</span>
+                    <div class="plot-mini-value">${data.plot.section ?? 'N/A'}</div>
+                </div>
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Lot</span>
+                    <div class="plot-mini-value">${data.plot.lot ?? 'N/A'}</div>
+                </div>
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Phase</span>
+                    <div class="plot-mini-value">${phaseText}</div>
+                </div>
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Type</span>
+                    <div class="plot-mini-value">${data.plot.type ?? 'N/A'}</div>
+                </div>
+                <div class="plot-mini-card">
+                    <span class="plot-mini-label">Status</span>
+                    <div class="plot-mini-value">${data.plot.status ?? 'N/A'}</div>
+                </div>
+            </div>
+        `;
+
         let content = `
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p><strong>Type:</strong> ${data.plot.type}</p>
-                    <p><strong>Status:</strong> ${getStatusBadge(data.plot.status)}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Date Added:</strong> ${formatDate(data.plot.date_added)}</p>
-                </div>
+            ${metaCards}
+            <div class="plot-mini-card" style="margin-bottom: 12px; background:#eff6ff; border-color:#bfdbfe;">
+                <span class="plot-mini-label" style="color:#1e40af;">Date Added</span>
+                <div class="plot-mini-value" style="color:#1e3a8a;">${formatDate(data.plot.date_added)}</div>
             </div>
         `;
 
         if (data.userRole === 'Engineer') {
             if (data.deceased_records && data.deceased_records.length > 0) {
-                content += '<hr><h6><strong>Deceased Records:</strong></h6>';
-                content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                content += '<thead><tr><th>Name</th><th>Date of Death</th><th>Contact</th><th>Actions</th></tr></thead><tbody>';
+                content += `
+                    <div class="plot-section-title">
+                        <h6><i class="fas fa-user me-2"></i>Deceased Records</h6>
+                        <span class="badge bg-primary">${data.deceased_records.length}</span>
+                    </div>
+                    <div class="deceased-cards">
+                `;
 
                 data.deceased_records.forEach(record => {
+                    const safeName = escapeJsString(record.full_name || '');
                     content += `
-                        <tr>
-                            <td><strong>${record.full_name}</strong></td>
-                            <td>${formatDate(record.date_of_death)}</td>
-                            <td>${record.contact_person || 'N/A'}<br>
-                                <small>${record.contact_number || ''}</small></td>
-                            <td>
-                                <a href="edit_burial_record.php?id=${record.deceased_id}"
-                                   class="btn btn-sm btn-primary me-2">
+                        <div class="deceased-card">
+                            <div class="deceased-name">${record.full_name || 'Unnamed'}</div>
+                            <p class="deceased-meta">
+                                <strong>Died:</strong> ${formatDate(record.date_of_death)}<br>
+                                <strong>Buried:</strong> ${formatDate(record.date_of_burial)}<br>
+                                <small><strong>Contact:</strong> ${record.contact_person || 'N/A'} ${record.contact_number ? `(${record.contact_number})` : ''}</small>
+                            </p>
+                            <div class="deceased-actions">
+                                <a href="edit_burial_record.php?id=${record.deceased_id}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <button class="btn btn-sm btn-danger"
-                                        onclick="deleteDeceasedRecord(${record.deceased_id}, '${record.full_name}')">
+                                <button class="btn btn-danger btn-sm"
+                                        onclick="deleteDeceasedRecord(${record.deceased_id}, '${safeName}')">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     `;
                 });
 
-                content += '</tbody></table></div>';
+                content += `</div>`;
             } else {
-                content += '<hr><p class="text-muted text-center">No deceased records for this plot</p>';
+                content += `
+                    <div class="plot-section-title">
+                        <h6><i class="fas fa-user me-2"></i>Deceased Records</h6>
+                    </div>
+                    <p class="text-muted text-center mb-2">No deceased records for this plot</p>
+                `;
                 content += `<div class="text-center mt-3">
                     <a href="adding_burial_records.php?plot_id=${plotId}"
                        class="btn btn-success btn-sm">
@@ -923,9 +1065,13 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
 
         } else if (data.userRole === 'Treasurer') {
             if (data.deceased_records && data.deceased_records.length > 0) {
-                content += '<hr><h6><strong>Burial & Payment Records:</strong></h6>';
-                content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                content += '<thead><tr><th>Name</th><th>Buried</th><th>Rental Period</th><th>Status</th></tr></thead><tbody>';
+                content += `
+                    <div class="plot-section-title">
+                        <h6><i class="fas fa-receipt me-2"></i>Burial & Payment Summary</h6>
+                        <span class="badge bg-primary">${data.deceased_records.length}</span>
+                    </div>
+                    <div class="deceased-cards">
+                `;
 
                 let isOverdue = false;
                 const paymentTargetRecord = getPaymentTargetRecord(data.deceased_records);
@@ -951,16 +1097,24 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                     }
 
                     content += `
-                        <tr>
-                            <td><strong>${record.full_name}</strong></td>
-                            <td>${formatDate(record.date_of_burial)}</td>
-                            <td><small>${rentalInfo}</small></td>
-                            <td><span class="badge bg-${statusBadgeColor}">${displayPaymentStatus}</span></td>
-                        </tr>
+                        <div class="deceased-card">
+                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                <div style="min-width:0;">
+                                    <div class="deceased-name" style="margin-bottom:4px;">${record.full_name || 'Unnamed'}</div>
+                                    <p class="deceased-meta mb-0">
+                                        <strong>Buried:</strong> ${formatDate(record.date_of_burial)}<br>
+                                        <small><strong>Rental:</strong> ${rentalInfo}</small>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-${statusBadgeColor}">${displayPaymentStatus}</span>
+                                </div>
+                            </div>
+                        </div>
                     `;
                 });
 
-                content += '</tbody></table></div>';
+                content += `</div>`;
 
                 if (isOverdue) {
                     content += `
@@ -994,7 +1148,12 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                 }
 
             } else {
-                content += '<hr><p class="text-muted text-center">No burial records for this plot</p>';
+                content += `
+                    <div class="plot-section-title">
+                        <h6><i class="fas fa-receipt me-2"></i>Burial & Payment Summary</h6>
+                    </div>
+                    <p class="text-muted text-center">No burial records for this plot</p>
+                `;
             }
         }
 
