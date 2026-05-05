@@ -57,9 +57,27 @@ try {
                     ELSE 'Unassigned'
                 END as phase,
                 COUNT(d.deceased_id) as deceased_count,
-                GROUP_CONCAT(d.full_name SEPARATOR ', ') as deceased_names
+                GROUP_CONCAT(d.full_name SEPARATOR ', ') as deceased_names,
+                CASE 
+                    WHEN p.status = 'Vacant' THEN 'Vacant'
+                    WHEN NOT EXISTS (SELECT 1 FROM rentals r WHERE r.plot_id = p.plot_id) THEN 'Vacant'
+                    ELSE CASE 
+                        WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) >= MAX(r.amount) AND MAX(r.rental_end) >= CURDATE() THEN 'Paid'
+                        WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) > 0 AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) < MAX(r.amount) THEN 'Partially Paid'
+                        WHEN MAX(r.rental_end) < CURDATE() AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) = 0 THEN 'Overdue'
+                        WHEN MAX(r.rental_end) < CURDATE() THEN 'Overdue - Partial'
+                        ELSE 'Unpaid'
+                    END
+                END as payment_status,
+                MAX(r.rental_end) as rental_end_date,
+                CASE 
+                    WHEN MAX(r.rental_end) < CURDATE() THEN DATEDIFF(CURDATE(), MAX(r.rental_end))
+                    ELSE NULL
+                END as days_overdue
               FROM plots p
               LEFT JOIN deceased d ON p.plot_id = d.plot_id
+              LEFT JOIN rentals r ON d.deceased_id = r.deceased_id
+              LEFT JOIN payments pay ON r.rental_id = pay.rental_id
               $whereClause
               GROUP BY p.plot_id
               ORDER BY p.block, p.section, p.lot";

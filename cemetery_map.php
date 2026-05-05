@@ -283,7 +283,7 @@ include 'includes/header.php';
             <div id="treasurerLegend" style="display:none;">
                 <div class="legend-item">
                     <div class="legend-box fully-paid"></div>
-                    <span>Fully Paid (3 Years)</span>
+                    <span>Paid (Full 3-Year)</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-box partially-paid"></div>
@@ -569,8 +569,8 @@ function getPlotColorClass(plot) {
         const paymentStatus = paymentData[key];
 
         if (paymentStatus === 'Paid')    return 'fully-paid';
-        if (paymentStatus === 'Overdue') return 'overdue';
-        if (paymentStatus === 'Pending') return 'partially-paid';
+        if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') return 'overdue';
+        if (paymentStatus === 'Partially Paid') return 'partially-paid';
         return 'unpaid';
     }
 
@@ -684,30 +684,46 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             }
 
         } else if (data.userRole === 'Treasurer') {
-            // Treasurer view - show only payment information
+            // Treasurer view - show payment information and details
             if (data.deceased_records && data.deceased_records.length > 0) {
-                content += '<hr><h6><strong>Burial Records (Payment Information):</strong></h6>';
+                content += '<hr><h6><strong>Burial & Payment Records:</strong></h6>';
                 content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                content += '<thead><tr><th>Name</th><th>Date of Burial</th><th>Payment Status</th></tr></thead><tbody>';
+                content += '<thead><tr><th>Name</th><th>Buried</th><th>Rental Period</th><th>Status</th></tr></thead><tbody>';
 
                 data.deceased_records.forEach(record => {
                     const key = `${data.plot.block} - ${data.plot.section} - ${data.plot.lot}`;
                     const paymentStatus = paymentData[key] || 'Unknown';
                     const statusBadgeColor = 
                         paymentStatus === 'Paid' ? 'success' :
-                        paymentStatus === 'Pending' ? 'warning' :
-                        paymentStatus === 'Overdue' ? 'danger' : 'secondary';
+                        paymentStatus === 'Partially Paid' ? 'warning' :
+                        paymentStatus === 'Overdue' ? 'danger' :
+                        paymentStatus === 'Overdue - Partial' ? 'danger' : 'secondary';
+
+                    // Try to extract rental dates if available
+                    const rentalInfo = record.rental_end_date 
+                        ? `3 years (ends ${formatDate(record.rental_end_date)})`
+                        : 'No rental record';
 
                     content += `
                         <tr>
                             <td><strong>${record.full_name}</strong></td>
                             <td>${formatDate(record.date_of_burial)}</td>
-                            <td><span class="badge bg-${statusBadgeColor}">${paymentStatus}</span></td>
+                            <td><small>${rentalInfo}</small></td>
+                            <td><a href="add_payment.php?plot_id=${plotId}" class="btn btn-${statusBadgeColor} btn-sm">${paymentStatus}</a></td>
                         </tr>
                     `;
                 });
 
                 content += '</tbody></table></div>';
+
+                // Add payment action button
+                content += `<div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Payment Required:</strong> 3-year rental period. 
+                    <a href="add_payment.php?plot_id=${plotId}" class="btn btn-sm btn-primary mt-2">
+                        <i class="fas fa-money-bill"></i> Record Payment
+                    </a>
+                </div>`;
             } else {
                 content += '<hr><p class="text-muted text-center">No burial records for this plot</p>';
             }
