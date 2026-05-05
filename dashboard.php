@@ -345,69 +345,25 @@ include 'includes/header.php';
             <p>Monitor cemetery statistics and manage burial records</p>
         </div>
 
-        <!-- Stats Cards -->
+        <!-- Charts -->
         <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="stat-card-modern vacant">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Vacant Plots</span>
-                        <div class="stat-card-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+            <div class="col-lg-5">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h5><i class="fas fa-chart-pie"></i> Plot Status</h5>
                     </div>
-                    <div class="stat-card-value" id="totalVacant">0</div>
+                    <div class="content-card-body">
+                        <canvas id="plotStatusChart" height="220"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card-modern occupied">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Occupied Plots</span>
-                        <div class="stat-card-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
+            <div class="col-lg-7">
+                <div class="content-card" id="paymentChartCard" style="display:none;">
+                    <div class="content-card-header">
+                        <h5><i class="fas fa-money-bill-wave"></i> Payment Status</h5>
                     </div>
-                    <div class="stat-card-value" id="totalOccupied">0</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card-modern total">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Total Plots</span>
-                        <div class="stat-card-icon">
-                            <i class="fas fa-map-marked-alt"></i>
-                        </div>
-                    </div>
-                    <div class="stat-card-value" id="totalPlots">0</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Stats (Treasurer Only) -->
-        <div id="paymentStats" style="display: none;">
-            <h3 class="mb-3" style="color: #1e3a8a; font-weight: 700;">
-                <i class="fas fa-money-bill-wave"></i> Payment Overview
-            </h3>
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="stat-card-modern paid">
-                        <div class="stat-card-header">
-                            <span class="stat-card-label">Paid Transactions</span>
-                            <div class="stat-card-icon">
-                                <i class="fas fa-check-double"></i>
-                            </div>
-                        </div>
-                        <div class="stat-card-value" id="totalPaid">0</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="stat-card-modern unpaid">
-                        <div class="stat-card-header">
-                            <span class="stat-card-label">Unpaid/Overdue</span>
-                            <div class="stat-card-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                        </div>
-                        <div class="stat-card-value" id="totalUnpaid">0</div>
+                    <div class="content-card-body">
+                        <canvas id="paymentStatusChart" height="220"></canvas>
                     </div>
                 </div>
             </div>
@@ -416,13 +372,10 @@ include 'includes/header.php';
         <!-- Plot Distribution -->
         <div class="content-card">
             <div class="content-card-header">
-                <h5><i class="fas fa-chart-pie"></i> Plot Distribution by Block</h5>
+                <h5><i class="fas fa-chart-bar"></i> Plots by Block</h5>
             </div>
-            <div class="content-card-body" id="blockDistribution">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2" style="color: #64748b;">Loading distribution data...</p>
-                </div>
+            <div class="content-card-body">
+                <canvas id="blockDistributionChart" height="140"></canvas>
             </div>
         </div>
     </div>
@@ -430,18 +383,111 @@ include 'includes/header.php';
 
 <?php include 'includes/footer.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+    let plotStatusChartInstance = null;
+    let paymentStatusChartInstance = null;
+    let blockDistributionChartInstance = null;
+
+    function destroyChart(instance) {
+        try { if (instance) instance.destroy(); } catch (e) {}
+    }
+
+    function renderPlotStatusChart(vacant, occupied, reserved) {
+        const ctx = document.getElementById('plotStatusChart');
+        if (!ctx) return;
+        destroyChart(plotStatusChartInstance);
+        plotStatusChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Vacant', 'Occupied', 'Reserved'],
+                datasets: [{
+                    data: [vacant, occupied, reserved],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderColor: ['#059669', '#dc2626', '#d97706'],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw}` } },
+                },
+                cutout: '68%',
+            }
+        });
+    }
+
+    function renderPaymentStatusChart(paid, unpaid) {
+        const card = document.getElementById('paymentChartCard');
+        const ctx = document.getElementById('paymentStatusChart');
+        if (!card || !ctx) return;
+        card.style.display = 'block';
+        destroyChart(paymentStatusChartInstance);
+        paymentStatusChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Unpaid / Overdue'],
+                datasets: [{
+                    data: [paid, unpaid],
+                    backgroundColor: ['#10b981', '#f59e0b'],
+                    borderColor: ['#059669', '#d97706'],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } },
+                },
+                cutout: '68%',
+            }
+        });
+    }
+
+    function renderBlockDistributionChart(plotsByBlock) {
+        const ctx = document.getElementById('blockDistributionChart');
+        if (!ctx) return;
+        destroyChart(blockDistributionChartInstance);
+
+        const blocks = Object.keys(plotsByBlock).sort();
+        const vacant = blocks.map(b => plotsByBlock[b].vacant || 0);
+        const occupied = blocks.map(b => plotsByBlock[b].occupied || 0);
+        const reserved = blocks.map(b => (plotsByBlock[b].reserved || 0));
+
+        blockDistributionChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: blocks.map(b => `Block ${b}`),
+                datasets: [
+                    { label: 'Vacant', data: vacant, backgroundColor: '#10b981' },
+                    { label: 'Occupied', data: occupied, backgroundColor: '#ef4444' },
+                    { label: 'Reserved', data: reserved, backgroundColor: '#f59e0b' },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, ticks: { maxRotation: 0, autoSkip: true } },
+                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } },
+                }
+            }
+        });
+    }
+
     async function loadDashboard() {
         try {
             const response = await fetch('/api/get_vacancy_stats.php');
             const data = await response.json();
 
             if (data.success) {
-                // Update main stat cards
-                document.getElementById('totalVacant').textContent = data.stats.total_vacant || 0;
-                document.getElementById('totalOccupied').textContent = data.stats.total_occupied || 0;
-                document.getElementById('totalPlots').textContent = data.stats.total_plots || 0;
-
                 // Update sidebar stats
                 document.getElementById('sidebarTotalPlots').textContent = data.stats.total_plots || 0;
                 document.getElementById('sidebarVacant').textContent = data.stats.total_vacant || 0;
@@ -451,52 +497,20 @@ include 'includes/header.php';
                 const plotsByBlock = {};
                 data.plots.forEach(plot => {
                     if (!plotsByBlock[plot.block]) {
-                        plotsByBlock[plot.block] = { total: 0, vacant: 0, occupied: 0 };
+                        plotsByBlock[plot.block] = { total: 0, vacant: 0, occupied: 0, reserved: 0 };
                     }
                     plotsByBlock[plot.block].total++;
                     if (plot.status === 'Vacant') plotsByBlock[plot.block].vacant++;
                     if (plot.status === 'Occupied') plotsByBlock[plot.block].occupied++;
+                    if (plot.status === 'Reserved') plotsByBlock[plot.block].reserved++;
                 });
 
-                // Populate block distribution
-                const container = document.getElementById('blockDistribution');
-                let html = '';
-
-                Object.keys(plotsByBlock).sort().forEach(block => {
-                    const stats = plotsByBlock[block];
-                    const vacancyRate = ((stats.vacant / stats.total) * 100).toFixed(1);
-
-                    html += `
-                        <div class="block-row">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div style="flex: 1;">
-                                    <div class="block-name">Block ${block}</div>
-                                    <div class="block-stats">
-                                        <div class="block-stat-item">
-                                            <i class="fas fa-map-marked-alt" style="color: #64748b;"></i>
-                                            <span style="color: #64748b;">${stats.total} total</span>
-                                        </div>
-                                        <div class="block-stat-item">
-                                            <span class="badge-modern vacant">${stats.vacant} vacant</span>
-                                        </div>
-                                        <div class="block-stat-item">
-                                            <span class="badge-modern occupied">${stats.occupied} occupied</span>
-                                        </div>
-                                    </div>
-                                    <div class="progress-bar-custom">
-                                        <div class="progress-fill" style="width: ${vacancyRate}%"></div>
-                                    </div>
-                                </div>
-                                <div style="text-align: right; margin-left: 20px;">
-                                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">${vacancyRate}%</div>
-                                    <div style="font-size: 11px; color: #94a3b8;">Vacant</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
+                renderPlotStatusChart(
+                    parseInt(data.stats.total_vacant || 0, 10),
+                    parseInt(data.stats.total_occupied || 0, 10),
+                    parseInt(data.stats.total_reserved || 0, 10)
+                );
+                renderBlockDistributionChart(plotsByBlock);
             }
 
             // Load payment stats if Treasurer
@@ -519,7 +533,6 @@ include 'includes/header.php';
             const data = await response.json();
 
             if (data.success) {
-                document.getElementById('paymentStats').style.display = 'block';
                 document.getElementById('sidebarPaymentSection').style.display = 'block';
 
                 let paid = 0, unpaid = 0;
@@ -528,10 +541,9 @@ include 'includes/header.php';
                     else unpaid++;
                 });
 
-                document.getElementById('totalPaid').textContent = paid;
-                document.getElementById('totalUnpaid').textContent = unpaid;
                 document.getElementById('sidebarPaid').textContent = paid;
                 document.getElementById('sidebarUnpaid').textContent = unpaid;
+                renderPaymentStatusChart(paid, unpaid);
             }
         } catch (error) {
             console.error('Error loading payment stats:', error);
