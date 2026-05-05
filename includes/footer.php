@@ -1,5 +1,5 @@
     <!-- Footer -->
-    <footer class="text-center py-3 mt-5">
+    <footer class="text-center">
         <p class="mb-0 text-muted small">&copy; Municipality of Tuy. All rights reserved.</p>
     </footer>
 

@@ -20,7 +20,7 @@
         <div class="login-card">
             <!-- Logo -->
             <div class="login-logo">
-                <i class="fas fa-monument"></i>
+                <img src="img/municipal_logo.png" alt="Municipality of Tuy" style="width: 100px; height: 100px;">
             </div>
 
             <!-- Header -->
