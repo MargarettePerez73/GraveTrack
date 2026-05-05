@@ -11,19 +11,25 @@ include 'includes/header.php';
         overflow: hidden;
     }
 
-    .dashboard-sidebar {
-        width: 300px;
-        background: linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%);
-        color: white;
+    #welcomeText {
+        font-size: 14px;
+        color: #ffffff;
+        margin-top: 5px;
+    }
+    .records-sidebar, .dashboard-sidebar {
+        width: 280px;
+        background: white;
+        border-right: 3px solid #e2e8f0;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+        box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+        color: #1e3a8a;
     }
 
     .sidebar-header {
         padding: 25px 20px;
-        border-bottom: 2px solid rgba(255,255,255,0.1);
+        background: linear-gradient(135deg, #006eff, #00408f);
     }
 
     .sidebar-header h4 {
@@ -54,7 +60,8 @@ include 'includes/header.php';
     }
 
     .sidebar-stat {
-        background: rgba(255,255,255,0.1);
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border: 2px solid #3b82f6;
         padding: 15px;
         border-radius: 8px;
         margin-bottom: 10px;

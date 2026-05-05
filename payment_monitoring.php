@@ -1,7 +1,9 @@
 <?php
+session_start();
 $pageTitle = 'Payment Monitoring';
 $currentPage = 'payment_monitoring';
 include 'includes/header.php';
+
 
 // Check if user is Treasurer
 if ($_SESSION['role'] !== 'Treasurer') {
@@ -17,18 +19,21 @@ if ($_SESSION['role'] !== 'Treasurer') {
         overflow: hidden;
     }
 
-    .payment-sidebar {
+    .records-sidebar, .payment-sidebar {
         width: 280px;
-        background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-        color: white;
+        background: white;
+        border-right: 3px solid #e2e8f0;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow-y: auto;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+        color: #1e3a8a;
     }
 
     .sidebar-header {
         padding: 20px;
-        border-bottom: 2px solid rgba(255,255,255,0.1);
+        background: linear-gradient(135deg, #006eff, #00408f);
+
     }
 
     .sidebar-header h4 {
@@ -50,6 +55,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
     .sidebar-section {
         padding: 15px 20px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
+        
     }
 
     .sidebar-section h6 {
@@ -62,7 +68,8 @@ if ($_SESSION['role'] !== 'Treasurer') {
     }
 
     .sidebar-stat {
-        background: rgba(255,255,255,0.15);
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border: 2px solid #3b82f6;
         padding: 12px;
         border-radius: 8px;
         margin-bottom: 8px;
@@ -82,6 +89,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
 
     .filter-group {
         margin-bottom: 12px;
+        
     }
 
     .filter-label {
@@ -95,28 +103,32 @@ if ($_SESSION['role'] !== 'Treasurer') {
     .filter-input {
         width: 100%;
         padding: 8px 10px;
-        border: 2px solid rgba(255,255,255,0.3);
-        background: rgba(255,255,255,0.1);
-        color: white;
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border: 2px solid #3b82f6;
+        color: black;
         border-radius: 6px;
         font-size: 12px;
     }
 
     .filter-input::placeholder {
-        color: rgba(255,255,255,0.6);
+        color: rgba(0, 0, 0, 0.6);
     }
 
     .filter-input:focus {
         outline: none;
-        background: rgba(255,255,255,0.2);
-        border-color: rgba(255,255,255,0.5);
+        background: linear-gradient(135deg, #dbeafe, #0061d8);
+        border: 2px solid #3b82f6;
+        
     }
 
     .filter-input option {
-        background: #d97706;
-        color: white;
+        background: linear-gradient(135deg, #004aac, #bfdbfe);
+        color: black;
     }
 
+    #statusfilter{
+        color: black;
+    }
     .payment-main {
         flex: 1;
         overflow-y: auto;
@@ -379,17 +391,19 @@ if ($_SESSION['role'] !== 'Treasurer') {
                 <table class="compact-table">
                     <thead>
                         <tr>
+                            <th>Transaction ID</th>
                             <th>Deceased Name</th>
                             <th>Plot Location</th>
-                            <th>Rental Period</th>
+                            <th>Date of Transaction</th>
+                            <th>Contact Person</th>
+                            <th>Contact Number</th>
                             <th>Amount</th>
                             <th>Status</th>
-                            <th>Payment Date</th>
                         </tr>
                     </thead>
                     <tbody id="paymentsTableBody">
                         <tr>
-                            <td colspan="6" class="text-center" style="padding: 30px;">
+                            <td colspan="8" class="text-center" style="padding: 30px;">
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <p class="mt-2" style="color: #64748b;">Loading payments...</p>
                             </td>
@@ -452,12 +466,14 @@ if ($_SESSION['role'] !== 'Treasurer') {
         payments.forEach(payment => {
             const row = `
                 <tr>
+                    <td><strong>${payment.transaction_id}</strong></td>
                     <td><strong>${payment['Deceased Name']}</strong></td>
                     <td>${payment['Plot Location']}</td>
-                    <td style="font-size: 11px;">${payment['Rental Period']}</td>
-                    <td><strong>${formatCurrency(payment['Total Amount'])}</strong></td>
+                    <td>${payment['Date of Transaction'] ? formatDate(payment['Date of Transaction']) : 'N/A'}</td>
+                    <td>${payment['Contact Person'] || 'N/A'}</td>
+                    <td>${payment['Contact Number'] || 'N/A'}</td>
+                    <td><strong>${formatCurrency(payment['Amount'])}</strong></td>
                     <td>${getStatusBadge(payment.Status)}</td>
-                    <td>${payment['Payment Date'] ? formatDate(payment['Payment Date']) : 'N/A'}</td>
                 </tr>
             `;
             tbody.innerHTML += row;

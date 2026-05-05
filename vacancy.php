@@ -13,45 +13,54 @@ include 'includes/header.php';
 
     .vacancy-sidebar {
         width: 280px;
-        background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-        color: white;
+        background: white;
+        border-right: 3px solid #e2e8f0;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow-y: auto;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+        color: #1e3a8a;
     }
 
     .sidebar-header {
-        padding: 20px;
+        padding: 25px 20px;
         border-bottom: 2px solid rgba(255,255,255,0.1);
     }
 
     .sidebar-header h4 {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
         margin: 0;
-        color: white;
+        color: #1e3a8a;
     }
 
     .sidebar-section {
-        padding: 15px 20px;
+        padding: 20px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .sidebar-section h6 {
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 12px;
-        opacity: 0.8;
+        margin-bottom: 15px;
+        opacity: 0.7;
     }
 
     .sidebar-stat {
-        background: rgba(255,255,255,0.15);
-        padding: 12px;
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        border: 2px solid #3b82f6;
+        padding: 15px;
         border-radius: 8px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         backdrop-filter: blur(10px);
+        transition: all 0.3s;
+    }
+
+    .sidebar-stat:hover {
+        background: rgba(255,255,255,0.15);
+        transform: translateX(5px);
     }
 
     .sidebar-stat-label {
@@ -72,30 +81,26 @@ include 'includes/header.php';
     .filter-label {
         font-size: 11px;
         font-weight: 600;
+        color: #1e3a8a;
         margin-bottom: 6px;
         display: block;
-        opacity: 0.9;
     }
 
     .filter-input {
         width: 100%;
-        padding: 8px 10px;
-        border: 2px solid rgba(255,255,255,0.3);
-        background: rgba(255,255,255,0.1);
-        color: white;
-        border-radius: 6px;
-        font-size: 12px;
-    }
-
-    .filter-input option {
-        background: #059669;
-        color: white;
+        padding: 10px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        color: #1e3a8a;
+        transition: all 0.3s;
     }
 
     .filter-input:focus {
         outline: none;
-        background: rgba(255,255,255,0.2);
-        border-color: rgba(255,255,255,0.5);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     .vacancy-main {
@@ -235,20 +240,23 @@ include 'includes/header.php';
     }
 
     .btn-clear {
-        background: rgba(255,255,255,0.2);
-        color: white;
-        border: 2px solid rgba(255,255,255,0.3);
-        padding: 8px;
-        border-radius: 6px;
         width: 100%;
-        font-size: 12px;
+        padding: 12px;
+        background: #64748b;
+        color: white;
+        border: none;
+        border-radius: 8px;
         font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
         margin-top: 10px;
+        text-decoration: none;
+        transition: all 0.3s;
     }
 
     .btn-clear:hover {
-        background: rgba(255,255,255,0.3);
+        background: #475569;
+        transform: translateY(-2px);
     }
 </style>
 
@@ -265,7 +273,7 @@ include 'includes/header.php';
                 <div class="sidebar-stat-label">Vacant Plots</div>
                 <div class="sidebar-stat-value" id="sidebarVacant">0</div>
             </div>
-            <div class="sidebar-stat">
+            <div class="sidebar-stat">  
                 <div class="sidebar-stat-label">Occupied Plots</div>
                 <div class="sidebar-stat-value" id="sidebarOccupied">0</div>
             </div>
@@ -403,16 +411,30 @@ include 'includes/header.php';
                 document.getElementById('sidebarOccupied').textContent = data.stats.total_occupied;
                 document.getElementById('sidebarTotal').textContent = data.stats.total_plots;
 
-                // Populate block filter
+                // Populate block filter - sort alphabetically and set default to A
                 const blockFilter = document.getElementById('filterBlock');
-                blocks.forEach(block => {
-                    const option = document.createElement('option');
-                    option.value = block;
-                    option.textContent = `Block ${block}`;
-                    blockFilter.appendChild(option);
+                
+                // Sort blocks alphabetically
+                const sortedBlocks = blocks.sort((a, b) => a.localeCompare(b));
+                
+                // Clear existing options except the initial A
+                blockFilter.innerHTML = '<option value="A">Block A</option>';
+                
+                // Add sorted blocks (skip A to avoid duplicate with initial option)
+                sortedBlocks.forEach(block => {
+                    if (block !== 'A') {
+                        const option = document.createElement('option');
+                        option.value = block;
+                        option.textContent = `Block ${block}`;
+                        blockFilter.appendChild(option);
+                    }
                 });
-
-                displayPlots(allPlots);
+                
+                // Set default to A
+                blockFilter.value = 'A';
+                
+                // Auto-apply default filter
+                applyFilters();
             }
         } catch (error) {
             console.error('Error loading vacancy data:', error);
