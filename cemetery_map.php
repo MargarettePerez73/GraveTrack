@@ -7,6 +7,20 @@ include 'includes/header.php';
 <style>
     *, *::before, *::after { box-sizing: border-box; }
 
+    .overdue-compact {
+        padding: 0.75rem 1rem !important;
+        margin-bottom: 1rem !important;
+        font-size: 0.875rem;
+    }
+    .overdue-compact .btn {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
     .cemetery-layout {
         display: flex;
         height: calc(100vh - 60px);
@@ -233,6 +247,27 @@ include 'includes/header.php';
     .lot-box.unpaid        { background: #ef4444; border-color: #dc2626; color: white; }
     .lot-box.overdue       { background: #991b1b; border-color: #7f1d1d; color: white; }
 
+    /* Search highlight/blur effects */
+    .lot-box.highlighted {
+        box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.8) !important;
+        transform: scale(1.3) !important;
+        z-index: 1000 !important;
+        background: linear-gradient(45deg, #fbbf24, #f59e0b) !important;
+        border-color: #d97706 !important;
+        animation: pulse 1.5s infinite !important;
+    }
+
+    .lot-box.blurred {
+        filter: blur(1.5px) !important;
+        opacity: 0.4 !important;
+        transform: scale(0.95) !important;
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.8); }
+        50% { box-shadow: 0 0 0 6px #fbbf24, 0 0 30px rgba(251,191,36,1); }
+    }
+
     .phase-labels-row {
         display: flex;
         width: 100%;
@@ -246,6 +281,122 @@ include 'includes/header.php';
     }
 
     .phase-label-cell { text-align: center; text-transform: uppercase; }
+
+    /* ── Payment Modal Styles ── */
+    #paymentModal .modal-header {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: white;
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+    #paymentModal .modal-header .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    #paymentModal .modal-title {
+        font-weight: 700;
+        font-size: 15px;
+    }
+    .payment-plot-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        color: #1e40af;
+    }
+    .payment-plot-info strong { font-size: 14px; }
+    .payment-form-group {
+        margin-bottom: 16px;
+    }
+    .payment-form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 6px;
+    }
+    .payment-form-group label .required-star {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+    .payment-form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        color: #111827;
+    }
+    .payment-form-group input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .payment-form-group input.is-invalid {
+        border-color: #ef4444;
+    }
+    .payment-form-group .invalid-feedback {
+        display: none;
+        font-size: 11px;
+        color: #ef4444;
+        margin-top: 4px;
+    }
+    .payment-form-group input.is-invalid + .invalid-feedback,
+    .payment-form-group input.is-invalid ~ .invalid-feedback {
+        display: block;
+    }
+    .payment-amount-prefix {
+        position: relative;
+    }
+    .payment-amount-prefix span {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-weight: 700;
+        font-size: 14px;
+        pointer-events: none;
+    }
+    .payment-amount-prefix input {
+        padding-left: 28px;
+    }
+    #submitPaymentBtn {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border: none;
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 8px;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+    #submitPaymentBtn:hover { opacity: 0.9; transform: translateY(-1px); }
+    #submitPaymentBtn:active { transform: translateY(0); }
+    #submitPaymentBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .payment-success-msg {
+        display: none;
+        background: #d1fae5;
+        border: 1px solid #6ee7b7;
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: #065f46;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 12px;
+    }
+    .payment-error-msg {
+        display: none;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: #991b1b;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 12px;
+    }
 </style>
 
 <div class="cemetery-layout">
@@ -286,8 +437,8 @@ include 'includes/header.php';
                     <span>Paid (Full 3-Year)</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-box partially-paid"></div>
-                    <span>Partially Paid</span>
+                    <div class="legend-box fully-paid"></div>
+                    <span>Paid</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-box unpaid"></div>
@@ -296,6 +447,11 @@ include 'includes/header.php';
                 <div class="legend-item">
                     <div class="legend-box overdue"></div>
                     <span>Overdue (Penalty Applied)</span>
+                </div>
+                <div class="mt-3">
+                    <a href="payment_monitoring.php?overdue=true" class="btn btn-warning btn-sm w-100" target="_blank">
+                        <i class="fas fa-exclamation-triangle"></i> View All Overdue Payments
+                    </a>
                 </div>
             </div>
         </div>
@@ -352,6 +508,107 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- ══════════════════════════════════════════
+     PAYMENT MODAL
+     ══════════════════════════════════════════ -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel">
+                    <i class="fas fa-dollar-sign me-2"></i> Record Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Plot context info -->
+                <div class="payment-plot-info" id="paymentPlotInfo">
+                    <strong id="paymentPlotTitle">Plot Details</strong><br>
+                    <span id="paymentPlotSubtitle" class="text-muted" style="font-size:12px;"></span>
+                </div>
+
+                <!-- OR Number -->
+                <div class="payment-form-group">
+                    <label for="payOrNumber">
+                        OR Number <span class="required-star">*</span>
+                    </label>
+                    <input type="text"
+                           id="payOrNumber"
+                           placeholder="e.g. OR-2024-001234"
+                           maxlength="50">
+                    <div class="invalid-feedback">OR Number is required.</div>
+                </div>
+
+                <!-- Paid By -->
+                <div class="payment-form-group">
+                    <label for="payPaidBy">
+                        Paid By <span class="required-star">*</span>
+                    </label>
+                    <input type="text"
+                           id="payPaidBy"
+                           placeholder="Full name of payer"
+                           maxlength="100">
+                    <div class="invalid-feedback">Payer name is required.</div>
+                </div>
+
+                <!-- Amount -->
+                <div class="payment-form-group">
+                    <label for="payAmount">
+                        Amount <span class="required-star">*</span>
+                    </label>
+                    <div class="payment-amount-prefix">
+                        <span>₱</span>
+                        <input type="number"
+                               id="payAmount"
+                               placeholder="0.00"
+                               min="0.01"
+                               step="0.01">
+                    </div>
+                    <div class="invalid-feedback">A valid amount greater than 0 is required.</div>
+                </div>
+
+                <!-- Payment Date -->
+                <div class="payment-form-group">
+                    <label for="payDate">
+                        Payment Date <span class="required-star">*</span>
+                    </label>
+                    <input type="date" id="payDate">
+                    <div class="invalid-feedback">Payment date is required.</div>
+                </div>
+
+                <!-- Hidden fields used for API payload -->
+                <input type="hidden" id="payPlotId">
+                <input type="hidden" id="payRentalId">
+                <input type="hidden" id="payDeceasedId">
+
+                <!-- Feedback messages -->
+                <div class="payment-success-msg" id="paySuccessMsg">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="paySuccessText">Payment recorded successfully!</span>
+                </div>
+                <div class="payment-error-msg" id="payErrorMsg">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <span id="payErrorText">An error occurred. Please try again.</span>
+                </div>
+
+            </div><!-- /modal-body -->
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary text-white" id="submitPaymentBtn"
+                        onclick="submitPayment()">
+                    <i class="fas fa-save me-1"></i> Save Payment
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- ══════════════════════════════════════════ -->
 
 <?php include 'includes/footer.php'; ?>
 
@@ -462,21 +719,10 @@ function renderCemeteryMap() {
         document.getElementById('treasurerLegend').style.display = 'none';
     }
 
-    /*
-     * Group plots by phase and block.
-     *
-     * FIX: The API (get_cemetery_map.php) now correctly returns phase='Phase 3'
-     * for block 'AA'. This client-side grouping therefore works correctly for
-     * all phases without any additional changes here.
-     *
-     * Previously, block 'AA' came back with phase='Phase 1' due to the REGEXP
-     * evaluation order bug in the API's CASE expression, which meant
-     * phases['Phase 3']['AA'] was always empty and AA plots never appeared.
-     */
     const phases = { 'Phase 1': {}, 'Phase 2': {}, 'Phase 3': {} };
 
     allPlots.forEach(plot => {
-        const phase = plot.phase || 'Phase 1'; // safe default
+        const phase = plot.phase || 'Phase 1';
         const block = plot.block;
 
         if (!phases[phase])        phases[phase]        = {};
@@ -493,13 +739,11 @@ function renderCemeteryMap() {
 
     let html = '<div class="all-blocks" id="allBlocks">';
 
-    // PHASE 3 — Block AA (20 lots) + unnamed overflow column (10 lots)
     html += renderBlockColumn('AA', 'Phase 3', findPlot, 20);
     html += renderBlockColumn('',   'Phase 3', findPlot, 10);
 
     html += '<div class="phase-divider"></div>';
 
-    // PHASE 2 — Blocks T–Z
     const phase2Groups = [['Z','Y'], ['X','W'], ['V','U'], ['T']];
     phase2Groups.forEach((group, gi) => {
         if (gi > 0) html += '<div class="pair-gap"></div>';
@@ -508,7 +752,6 @@ function renderCemeteryMap() {
 
     html += '<div class="phase-divider"></div>';
 
-    // PHASE 1 — Blocks A–I
     const phase1Groups = [['I','H'], ['G','F'], ['E','D'], ['C','B'], ['A']];
     phase1Groups.forEach((group, gi) => {
         if (gi > 0) html += '<div class="pair-gap"></div>';
@@ -541,16 +784,18 @@ function renderBlockColumn(blockName, phaseName, findPlot, lotsCount = 20) {
         const colorClass  = plot ? getPlotColorClass(plot) : 'vacant';
         const plotId      = plot ? plot.plot_id : null;
         const displayBlock = blockName || 'Unnamed';
+        const plotSection = plot ? plot.section : '';
 
         const tooltip = plot
             ? `Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot} - ${plot.status}`
             : `Block ${displayBlock}, Lot ${lot} - Vacant`;
 
-        // All lot boxes have a working onclick — plotId may be null for truly
-        // vacant plots that have no DB row yet; viewPlotDetails handles that case.
         html += `
             <div class="lot-box ${colorClass}"
                  title="${tooltip}"
+                 data-block="${displayBlock}"
+                 data-section="${plotSection}"
+                 data-lot="${lot}"
                  onclick="viewPlotDetails(${plotId}, '${blockName}', ${lot}, '${phaseName}')">
                 ${lot}
             </div>
@@ -568,9 +813,8 @@ function getPlotColorClass(plot) {
         const key           = `${plot.block} - ${plot.section} - ${plot.lot}`;
         const paymentStatus = paymentData[key];
 
-        if (paymentStatus === 'Paid')    return 'fully-paid';
+        if (paymentStatus === 'Paid' || paymentStatus === 'Partially Paid') return 'fully-paid';
         if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') return 'overdue';
-        if (paymentStatus === 'Partially Paid') return 'partially-paid';
         return 'unpaid';
     }
 
@@ -580,7 +824,6 @@ function getPlotColorClass(plot) {
 /* ─── Plot detail modal ─── */
 
 async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
-    // Vacant plot with no DB record
     if (!plotId || plotId === null || plotId === 'null') {
         const displayBlock = blockName || 'Unnamed';
 
@@ -595,13 +838,10 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             </div>
         `;
 
-        // Engineer can add burial record to vacant plot
         if (userRole === 'Engineer') {
-            // For truly vacant plots with no DB record, we can't link via plot_id
-            // Display message instead
             vacantContent += `
                 <div class="alert alert-warning mt-3">
-                    <i class="fas fa-info-circle"></i> This plot exists on the map but has no database record yet. 
+                    <i class="fas fa-info-circle"></i> This plot exists on the map but has no database record yet.
                     <a href="adding_burial_records.php" class="btn btn-success btn-sm mt-2">
                         <i class="fas fa-plus"></i> Add Burial Record
                     </a>
@@ -643,9 +883,7 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             </div>
         `;
 
-        // Role-based content display
         if (data.userRole === 'Engineer') {
-            // Engineer view - show full burial records with edit/delete options
             if (data.deceased_records && data.deceased_records.length > 0) {
                 content += '<hr><h6><strong>Deceased Records:</strong></h6>';
                 content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
@@ -684,46 +922,77 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
             }
 
         } else if (data.userRole === 'Treasurer') {
-            // Treasurer view - show payment information and details
             if (data.deceased_records && data.deceased_records.length > 0) {
                 content += '<hr><h6><strong>Burial & Payment Records:</strong></h6>';
                 content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
                 content += '<thead><tr><th>Name</th><th>Buried</th><th>Rental Period</th><th>Status</th></tr></thead><tbody>';
 
+                let isOverdue = false;
+                const paymentTargetRecord = getPaymentTargetRecord(data.deceased_records);
+                const paymentTargetName = paymentTargetRecord
+                    ? escapeJsString(paymentTargetRecord.full_name || '')
+                    : '';
+
                 data.deceased_records.forEach(record => {
                     const key = `${data.plot.block} - ${data.plot.section} - ${data.plot.lot}`;
-                    const paymentStatus = paymentData[key] || 'Unknown';
-                    const statusBadgeColor = 
-                        paymentStatus === 'Paid' ? 'success' :
-                        paymentStatus === 'Partially Paid' ? 'warning' :
-                        paymentStatus === 'Overdue' ? 'danger' :
-                        paymentStatus === 'Overdue - Partial' ? 'danger' : 'secondary';
+                    const paymentStatus = paymentData[key] || data.plot.payment_status || 'Unknown';
+                    const displayPaymentStatus = paymentStatus === 'Partially Paid' ? 'Paid' : paymentStatus;
+                    const statusBadgeColor =
+                        displayPaymentStatus === 'Paid'              ? 'success' :
+                        paymentStatus === 'Overdue'           ? 'danger'  :
+                        paymentStatus === 'Overdue - Partial' ? 'danger'  : 'secondary';
 
-                    // Try to extract rental dates if available
-                    const rentalInfo = record.rental_end_date 
+                    const rentalInfo = record.rental_end_date
                         ? `3 years (ends ${formatDate(record.rental_end_date)})`
                         : 'No rental record';
+
+                    if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') {
+                        isOverdue = true;
+                    }
 
                     content += `
                         <tr>
                             <td><strong>${record.full_name}</strong></td>
                             <td>${formatDate(record.date_of_burial)}</td>
                             <td><small>${rentalInfo}</small></td>
-                            <td><a href="add_payment.php?plot_id=${plotId}" class="btn btn-${statusBadgeColor} btn-sm">${paymentStatus}</a></td>
+                            <td><span class="badge bg-${statusBadgeColor}">${displayPaymentStatus}</span></td>
                         </tr>
                     `;
                 });
 
                 content += '</tbody></table></div>';
 
-                // Add payment action button
-                content += `<div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle"></i> 
-                    <strong>Payment Required:</strong> 3-year rental period. 
-                    <a href="add_payment.php?plot_id=${plotId}" class="btn btn-sm btn-primary mt-2">
-                        <i class="fas fa-money-bill"></i> Record Payment
-                    </a>
-                </div>`;
+                if (isOverdue) {
+                    content += `
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Overdue rental payments — penalty applied</strong>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="payment_monitoring.php?plot_id=${plotId}&block=${data.plot.block}&section=${data.plot.section}&lot=${data.plot.lot}&overdue=true"
+                                   class="btn btn-warning flex-fill">
+                                    <i class="fas fa-dollar-sign"></i> View Payments
+                                </a>
+                                <button class="btn btn-outline-warning"
+                                        onclick="openPaymentModal(${plotId}, '${data.plot.block}', '${data.plot.section}', '${data.plot.lot}', ${paymentTargetRecord ? paymentTargetRecord.rental_id : 'null'}, ${paymentTargetRecord ? paymentTargetRecord.deceased_id : 'null'}, '${paymentTargetName}')">
+                                    <i class="fas fa-plus"></i> Record Payment
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    /* Non-overdue occupied plot: still allow recording payment */
+                    content += `
+                        <div class="text-end mt-3">
+                            <button class="btn btn-outline-primary btn-sm"
+                                    onclick="openPaymentModal(${plotId}, '${data.plot.block}', '${data.plot.section}', '${data.plot.lot}', ${paymentTargetRecord ? paymentTargetRecord.rental_id : 'null'}, ${paymentTargetRecord ? paymentTargetRecord.deceased_id : 'null'}, '${paymentTargetName}')">
+                                <i class="fas fa-plus me-1"></i> Record Payment
+                            </button>
+                        </div>
+                    `;
+                }
+
             } else {
                 content += '<hr><p class="text-muted text-center">No burial records for this plot</p>';
             }
@@ -745,7 +1014,6 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
 /* ─── Delete Deceased Record ─── */
 
 async function deleteDeceasedRecord(deceasedId, fullName) {
-    // Only engineers can delete records
     if (userRole !== 'Engineer') {
         alert('Only engineers can delete burial records.');
         return;
@@ -765,9 +1033,7 @@ async function deleteDeceasedRecord(deceasedId, fullName) {
         try {
             const response = await fetch('/api/delete_burial_record.php', {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({ deceased_id: deceasedId })
             });
@@ -777,8 +1043,8 @@ async function deleteDeceasedRecord(deceasedId, fullName) {
             if (data.success) {
                 Swal.fire('Deleted!', 'Burial record has been deleted successfully.', 'success');
                 setTimeout(() => {
-                    document.getElementById('plotModal').closest('.modal').click(); // Close modal
-                    loadCemeteryMap(); // Reload map
+                    document.getElementById('plotModal').closest('.modal').click();
+                    loadCemeteryMap();
                 }, 1500);
             } else {
                 Swal.fire('Error', data.message || 'Failed to delete record', 'error');
@@ -789,6 +1055,171 @@ async function deleteDeceasedRecord(deceasedId, fullName) {
         }
     }
 }
+
+/* ══════════════════════════════════════════════════════
+   PAYMENT MODAL LOGIC
+   ══════════════════════════════════════════════════════ */
+
+/**
+ * Opens the payment modal, pre-filling plot context.
+ * Called from the "Record Payment" button injected inside the plot detail modal.
+ */
+function openPaymentModal(plotId, block, section, lot, rentalId = null, deceasedId = null, deceasedName = '') {
+    /* Reset the form */
+    ['payOrNumber', 'payPaidBy', 'payAmount', 'payDate'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.classList.remove('is-invalid');
+    });
+
+    document.getElementById('paySuccessMsg').style.display = 'none';
+    document.getElementById('payErrorMsg').style.display   = 'none';
+    document.getElementById('submitPaymentBtn').disabled   = false;
+
+    /* Set today's date as default */
+    document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+
+    /* Fill plot context */
+    document.getElementById('payPlotId').value = plotId;
+    document.getElementById('payRentalId').value = rentalId || '';
+    document.getElementById('payDeceasedId').value = deceasedId || '';
+    document.getElementById('paymentPlotTitle').textContent =
+        `Block ${block}, Section ${section}, Lot ${lot}`;
+    document.getElementById('paymentPlotSubtitle').textContent =
+        deceasedName
+            ? `Plot ID: ${plotId} | Deceased: ${deceasedName}`
+            : `Plot ID: ${plotId}`;
+
+    /* Hide the plot modal and show the payment modal */
+    const plotModalEl = document.getElementById('plotModal');
+    const plotModal   = bootstrap.Modal.getInstance(plotModalEl);
+    if (plotModal) plotModal.hide();
+
+    setTimeout(() => {
+        new bootstrap.Modal(document.getElementById('paymentModal')).show();
+    }, 300);
+}
+
+/** Validates the payment form; returns true if valid. */
+function validatePaymentForm() {
+    let valid = true;
+
+    const orNumber = document.getElementById('payOrNumber');
+    const paidBy   = document.getElementById('payPaidBy');
+    const amount   = document.getElementById('payAmount');
+    const date     = document.getElementById('payDate');
+
+    if (!orNumber.value.trim()) {
+        orNumber.classList.add('is-invalid'); valid = false;
+    } else { orNumber.classList.remove('is-invalid'); }
+
+    if (!paidBy.value.trim()) {
+        paidBy.classList.add('is-invalid'); valid = false;
+    } else { paidBy.classList.remove('is-invalid'); }
+
+    if (!amount.value || parseFloat(amount.value) <= 0) {
+        amount.classList.add('is-invalid'); valid = false;
+    } else { amount.classList.remove('is-invalid'); }
+
+    if (!date.value) {
+        date.classList.add('is-invalid'); valid = false;
+    } else { date.classList.remove('is-invalid'); }
+
+    return valid;
+}
+
+/** Submits the payment to /api/add_payment.php */
+async function submitPayment() {
+    if (!validatePaymentForm()) return;
+
+    const rentalId = document.getElementById('payRentalId').value;
+    const deceasedId = document.getElementById('payDeceasedId').value;
+    if (!rentalId || !deceasedId) {
+        const errorEl = document.getElementById('payErrorMsg');
+        document.getElementById('payErrorText').textContent =
+            'Cannot save payment because rental details are missing for this plot.';
+        errorEl.style.display = 'flex';
+        return;
+    }
+
+    const btn = document.getElementById('submitPaymentBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+    document.getElementById('paySuccessMsg').style.display = 'none';
+    document.getElementById('payErrorMsg').style.display   = 'none';
+
+    const payload = {
+        plot_id  : document.getElementById('payPlotId').value,
+        rental_id: parseInt(rentalId, 10),
+        deceased_id: parseInt(deceasedId, 10),
+        or_number: document.getElementById('payOrNumber').value.trim(),
+        paid_by  : document.getElementById('payPaidBy').value.trim(),
+        amount   : parseFloat(document.getElementById('payAmount').value),
+        payment_date: document.getElementById('payDate').value,
+    };
+
+    try {
+        const response = await fetch('/api/add_payment.php', {
+            method     : 'POST',
+            headers    : { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body       : JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const successEl = document.getElementById('paySuccessMsg');
+            document.getElementById('paySuccessText').textContent =
+                data.message || 'Payment recorded successfully!';
+            successEl.style.display = 'flex';
+
+            /* Reload payment data in background then close modal */
+            await loadPaymentData();
+            renderCemeteryMap();
+
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(
+                    document.getElementById('paymentModal')
+                ).hide();
+            }, 1800);
+        } else {
+            const errorEl = document.getElementById('payErrorMsg');
+            document.getElementById('payErrorText').textContent =
+                data.message || 'Failed to record payment. Please try again.';
+            errorEl.style.display = 'flex';
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save me-1"></i> Save Payment';
+        }
+    } catch (error) {
+        console.error('Payment submission error:', error);
+        const errorEl = document.getElementById('payErrorMsg');
+        document.getElementById('payErrorText').textContent =
+            'Network error. Please check your connection and try again.';
+        errorEl.style.display = 'flex';
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-1"></i> Save Payment';
+    }
+}
+
+function getPaymentTargetRecord(records) {
+    if (!Array.isArray(records) || records.length === 0) return null;
+
+    // Use a record with a rental first since payment API requires rental_id.
+    const withRental = records.find(record => record.rental_id);
+    return withRental || records[0];
+}
+
+function escapeJsString(value) {
+    return String(value)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+}
+
+/* ══════════════════════════════════════════════════════ */
 
 /* ─── Helpers ─── */
 
@@ -809,7 +1240,11 @@ document.getElementById('searchInput').addEventListener('input', function () {
     const searchTerm = this.value.trim();
     clearTimeout(searchTimeout);
 
-    if (searchTerm.length < 2) { hideSearchResults(); return; }
+    if (searchTerm.length < 2) {
+        hideSearchResults();
+        clearHighlight();
+        return;
+    }
 
     searchTimeout = setTimeout(() => performLiveSearch(searchTerm), 300);
 });
@@ -831,6 +1266,7 @@ function displaySearchResults(results) {
     if (!results || results.length === 0) {
         container.innerHTML = '<div class="no-results">No deceased found</div>';
         container.classList.add('active');
+        clearHighlight();
         return;
     }
 
@@ -849,35 +1285,79 @@ function displaySearchResults(results) {
     `).join('');
 
     container.classList.add('active');
+    highlightPlotsFromResults(results);
 }
 
 function selectSearchResult(plotId, block, lot) {
     hideSearchResults();
     document.getElementById('searchInput').value = '';
     viewPlotDetails(plotId, block, lot, '');
-    highlightPlot(block, lot);
+
+    setTimeout(() => {
+        highlightPlot(block, lot);
+    }, 500);
 }
 
 function hideSearchResults() {
     document.getElementById('searchResults').classList.remove('active');
 }
 
-function highlightPlot(block, lot) {
-    removeHighlight();
+function clearHighlight() {
     document.querySelectorAll('.lot-box').forEach(box => {
-        const t = box.getAttribute('title');
-        if (t && t.includes(`Block ${block}`) && t.includes(`Lot ${lot}`)) {
-            box.style.outline       = '4px solid #fbbf24';
-            box.style.outlineOffset = '2px';
-            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        box.classList.remove('highlighted', 'blurred');
     });
 }
 
-function removeHighlight() {
+function highlightPlot(block, lot) {
+    clearHighlight();
+
+    let foundMatch = false;
+    const blockStr = String(block);
+    const lotStr = String(lot);
+
     document.querySelectorAll('.lot-box').forEach(box => {
-        box.style.outline = box.style.outlineOffset = '';
+        const boxBlock = box.dataset.block || '';
+        const boxLot = box.dataset.lot || '';
+        if (boxBlock === blockStr && boxLot === lotStr) {
+            box.classList.add('highlighted');
+            box.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            foundMatch = true;
+        } else {
+            box.classList.add('blurred');
+        }
     });
+
+    if (!foundMatch) clearHighlight();
+}
+
+function highlightPlotsFromResults(results) {
+    const matchedLocations = new Set(
+        (results || []).map(record => `${String(record.block)}|${String(record.section)}|${String(record.lot)}`)
+    );
+
+    if (matchedLocations.size === 0) {
+        clearHighlight();
+        return;
+    }
+
+    let firstMatch = null;
+
+    document.querySelectorAll('.lot-box').forEach(box => {
+        const key = `${box.dataset.block || ''}|${box.dataset.section || ''}|${box.dataset.lot || ''}`;
+
+        if (matchedLocations.has(key)) {
+            box.classList.add('highlighted');
+            box.classList.remove('blurred');
+            if (!firstMatch) firstMatch = box;
+        } else {
+            box.classList.remove('highlighted');
+            box.classList.add('blurred');
+        }
+    });
+
+    if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    }
 }
 
 /* ─── Map scaling ─── */
@@ -900,10 +1380,27 @@ function scaleMap() {
     scaler.style.transform = `scale(${scale})`;
 }
 
-/* ─── Click-outside closes search ─── */
+/* ─── Click-outside closes search & clear highlight ─── */
 
 document.addEventListener('click', e => {
-    if (!e.target.closest('.search-box')) hideSearchResults();
+    if (!e.target.closest('.search-box')) {
+        hideSearchResults();
+        clearHighlight();
+    }
+});
+
+/* ─── Keyboard shortcuts ─── */
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        clearHighlight();
+        document.getElementById('searchInput').value = '';
+        hideSearchResults();
+    }
+});
+
+/* ─── Clear on new search ─── */
+document.getElementById('searchInput').addEventListener('focus', () => {
+    clearHighlight();
 });
 
 /* ─── Initialise ─── */

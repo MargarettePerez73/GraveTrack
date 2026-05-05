@@ -289,6 +289,276 @@ if ($_SESSION['role'] !== 'Treasurer') {
     .btn-clear:hover {
         background: rgba(255,255,255,0.3);
     }
+
+    /* ── Record Payment Modal ── */
+    .rp-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        animation: rpFadeIn 0.2s ease;
+    }
+
+    .rp-overlay.active {
+        display: flex;
+    }
+
+    @keyframes rpFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    @keyframes rpSlideUp {
+        from { opacity: 0; transform: translateY(24px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .rp-card {
+        background: white;
+        border-radius: 14px;
+        width: 480px;
+        max-width: 95vw;
+        box-shadow: 0 24px 60px rgba(0, 64, 143, 0.22);
+        overflow: hidden;
+        animation: rpSlideUp 0.25s ease;
+    }
+
+    .rp-card-header {
+        padding: 20px 24px 16px;
+        background: linear-gradient(135deg, #006eff, #00408f);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .rp-card-header-left h5 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .rp-card-header-left p {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(255,255,255,0.75);
+    }
+
+    .rp-plot-badge {
+        background: rgba(255,255,255,0.15);
+        color: white;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 2px;
+        display: inline-block;
+    }
+
+    .rp-close-btn {
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        flex-shrink: 0;
+    }
+
+    .rp-close-btn:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .rp-card-body {
+        padding: 22px 24px;
+    }
+
+    .rp-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .rp-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .rp-form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .rp-form-group label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .rp-form-group label span.required {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+
+    .rp-input {
+        padding: 9px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 7px;
+        font-size: 13px;
+        color: #1e293b;
+        background: #f8fafc;
+        transition: border-color 0.15s, background 0.15s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .rp-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .rp-input.error {
+        border-color: #ef4444;
+        background: #fff5f5;
+    }
+
+    .rp-input-prefix-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .rp-input-prefix {
+        position: absolute;
+        left: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #64748b;
+        pointer-events: none;
+    }
+
+    .rp-input-prefix-wrap .rp-input {
+        padding-left: 24px;
+    }
+
+    .rp-error-msg {
+        font-size: 10px;
+        color: #ef4444;
+        display: none;
+    }
+
+    .rp-error-msg.show {
+        display: block;
+    }
+
+    .rp-divider {
+        border: none;
+        border-top: 1px solid #e2e8f0;
+        margin: 18px 0 16px;
+    }
+
+    .rp-card-footer {
+        padding: 0 24px 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .rp-btn-cancel {
+        padding: 9px 20px;
+        background: #f1f5f9;
+        color: #475569;
+        border: 2px solid #e2e8f0;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .rp-btn-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .rp-btn-submit {
+        padding: 9px 22px;
+        background: linear-gradient(135deg, #006eff, #00408f);
+        color: white;
+        border: none;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .rp-btn-submit:hover {
+        opacity: 0.92;
+        transform: translateY(-1px);
+    }
+
+    .rp-btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .rp-btn-submit .spinner {
+        width: 13px;
+        height: 13px;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        display: none;
+    }
+
+    .rp-btn-submit.loading .spinner {
+        display: block;
+    }
+
+    .rp-btn-submit.loading .btn-text {
+        display: none;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .rp-success-banner {
+        display: none;
+        background: #dcfce7;
+        border: 1.5px solid #86efac;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        font-size: 13px;
+        color: #15803d;
+        font-weight: 600;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rp-success-banner.show {
+        display: flex;
+    }
 </style>
 
 <div class="payment-layout">
@@ -328,7 +598,6 @@ if ($_SESSION['role'] !== 'Treasurer') {
                     <option value="">All Status</option>
                     <option value="Paid">Paid</option>
                     <option value="Unpaid">Unpaid</option>
-                    <option value="Pending">Pending</option>
                     <option value="Overdue">Overdue</option>
                 </select>
             </div>
@@ -415,41 +684,155 @@ if ($_SESSION['role'] !== 'Treasurer') {
     </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════
+     RECORD PAYMENT MODAL
+     Triggered by: openRecordPaymentModal(plotId, plotLabel)
+     from the plots modal's "Record Payment" button.
+════════════════════════════════════════════ -->
+<div class="rp-overlay" id="recordPaymentOverlay" onclick="handleOverlayClick(event)">
+    <div class="rp-card" role="dialog" aria-modal="true" aria-labelledby="rpModalTitle">
+
+        <!-- Header -->
+        <div class="rp-card-header">
+            <div class="rp-card-header-left">
+                <h5 id="rpModalTitle"><i class="fas fa-receipt"></i> Record Payment</h5>
+                <p>Enter the transaction details below</p>
+                <span class="rp-plot-badge" id="rpPlotLabel">Plot —</span>
+            </div>
+            <button class="rp-close-btn" onclick="closeRecordPaymentModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="rp-card-body">
+
+            <!-- Success banner (shown after save) -->
+            <div class="rp-success-banner" id="rpSuccessBanner">
+                <i class="fas fa-check-circle"></i>
+                Payment recorded successfully!
+            </div>
+
+            <div class="rp-form-grid">
+
+                <!-- Date -->
+                <div class="rp-form-group">
+                    <label for="rpDate">Date <span class="required">*</span></label>
+                    <input type="date" class="rp-input" id="rpDate">
+                    <span class="rp-error-msg" id="rpDateErr">Date is required.</span>
+                </div>
+
+                <!-- OR Number -->
+                <div class="rp-form-group">
+                    <label for="rpOrNumber">OR Number <span class="required">*</span></label>
+                    <input type="text" class="rp-input" id="rpOrNumber" placeholder="e.g. OR-2024-001">
+                    <span class="rp-error-msg" id="rpOrNumberErr">OR Number is required.</span>
+                </div>
+
+                <!-- Paid By -->
+                <div class="rp-form-group full-width">
+                    <label for="rpPaidBy">Paid By <span class="required">*</span></label>
+                    <input type="text" class="rp-input" id="rpPaidBy" placeholder="Full name of payer">
+                    <span class="rp-error-msg" id="rpPaidByErr">Paid By is required.</span>
+                </div>
+
+                <!-- Amount -->
+                <div class="rp-form-group full-width">
+                    <label for="rpAmount">Amount <span class="required">*</span></label>
+                    <div class="rp-input-prefix-wrap">
+                        <span class="rp-input-prefix">₱</span>
+                        <input type="number" class="rp-input" id="rpAmount" placeholder="0.00" min="0" step="0.01">
+                    </div>
+                    <span class="rp-error-msg" id="rpAmountErr">Enter a valid amount.</span>
+                </div>
+
+            </div>
+        </div>
+
+        <hr class="rp-divider" style="margin: 0 24px;">
+
+        <!-- Footer -->
+        <div class="rp-card-footer">
+            <button class="rp-btn-cancel" onclick="closeRecordPaymentModal()">Cancel</button>
+            <button class="rp-btn-submit" id="rpSubmitBtn" onclick="submitRecordPayment()">
+                <div class="spinner"></div>
+                <span class="btn-text"><i class="fas fa-save"></i> Save Payment</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
 <?php include 'includes/footer.php'; ?>
 
 <script>
     let allPayments = [];
+    let rpCurrentPlotId = null;
+
+    // ─── Payment Table Logic (unchanged) ───────────────────────────────────────
 
     async function loadPaymentData() {
         try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plotId = urlParams.get('plot_id');
+            const block = urlParams.get('block');
+            const section = urlParams.get('section');
+            const lot = urlParams.get('lot');
+            const overdueFilter = urlParams.get('overdue') === 'true';
+
             const response = await fetch('/api/get_payment_summary.php', { credentials: 'include' });
             const data = await response.json();
 
             if (data.success) {
-                allPayments = data.data;
-                displayPayments(allPayments);
-                updateStats(allPayments);
+                allPayments = data.data.map(payment => ({
+                    ...payment,
+                    Status: normalizePaymentStatus(payment.Status)
+                }));
+
+                let filteredPayments = allPayments;
+                if (overdueFilter) {
+                    filteredPayments = filteredPayments.filter(p => p.Status === 'Overdue');
+                }
+                if (plotId || block || section || lot) {
+                    const plotMatch = `${block || ''} - ${section || ''} - ${lot || ''}`.trim();
+                    if (plotMatch) {
+                        filteredPayments = filteredPayments.filter(p =>
+                            p['Plot Location'].includes(plotMatch)
+                        );
+                    }
+                }
+
+                displayPayments(filteredPayments);
+                updateStats(filteredPayments);
+
+                if (overdueFilter || plotId || block || section || lot) {
+                    const filterInfo = document.querySelector('.content-card-header h5');
+                    if (filterInfo) {
+                        filterInfo.innerHTML = `<i class="fas fa-filter text-warning"></i> ${overdueFilter ? 'Overdue ' : ''}${plotId ? 'Plot ' + plotId : ''}${block ? 'Block ' + block : ''} Payments`;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading payment data:', error);
             document.getElementById('paymentsTableBody').innerHTML =
-                '<tr><td colspan="6" class="text-center text-danger">Error loading payments</td></tr>';
+                '<tr><td colspan="8" class="text-center text-danger">Error loading payments</td></tr>';
         }
     }
 
     function updateStats(payments) {
-        const paid = payments.filter(p => p.Status === 'Paid').length;
-        const unpaid = payments.filter(p => p.Status === 'Unpaid').length;
+        const paid    = payments.filter(p => p.Status === 'Paid').length;
+        const unpaid  = payments.filter(p => p.Status === 'Unpaid').length;
         const overdue = payments.filter(p => p.Status === 'Overdue').length;
-        const pending = payments.filter(p => p.Status === 'Pending').length;
 
-        document.getElementById('paidCount').textContent = paid;
-        document.getElementById('unpaidCount').textContent = unpaid;
+        document.getElementById('paidCount').textContent    = paid;
+        document.getElementById('unpaidCount').textContent  = unpaid;
         document.getElementById('overdueCount').textContent = overdue;
-        document.getElementById('totalCount').textContent = payments.length;
+        document.getElementById('totalCount').textContent   = payments.length;
 
-        document.getElementById('sidebarPaid').textContent = paid;
-        document.getElementById('sidebarUnpaid').textContent = unpaid;
+        document.getElementById('sidebarPaid').textContent    = paid;
+        document.getElementById('sidebarUnpaid').textContent  = unpaid;
         document.getElementById('sidebarOverdue').textContent = overdue;
     }
 
@@ -483,43 +866,243 @@ if ($_SESSION['role'] !== 'Treasurer') {
     }
 
     function filterPayments() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const status = document.getElementById('statusFilter').value;
+        const urlParams     = new URLSearchParams(window.location.search);
+        const plotId        = urlParams.get('plot_id');
+        const block         = urlParams.get('block');
+        const section       = urlParams.get('section');
+        const lot           = urlParams.get('lot');
+        const overdueFilter = urlParams.get('overdue') === 'true';
+
+        const searchTerm  = document.getElementById('searchInput').value.toLowerCase();
+        const status      = document.getElementById('statusFilter').value;
         const amountRange = document.getElementById('amountFilter').value;
 
-        let filtered = allPayments.filter(payment => {
+        let filtered = allPayments;
+
+        if (overdueFilter) {
+            filtered = filtered.filter(p => p.Status === 'Overdue');
+        }
+        if (plotId || block || section || lot) {
+            const plotMatch = `${block || ''} - ${section || ''} - ${lot || ''}`.trim();
+            if (plotMatch) {
+                filtered = filtered.filter(p => p['Plot Location'].includes(plotMatch));
+            }
+        }
+
+        filtered = filtered.filter(payment => {
             const matchesSearch = payment['Deceased Name'].toLowerCase().includes(searchTerm);
             const matchesStatus = !status || payment.Status === status;
 
             let matchesAmount = true;
             if (amountRange) {
-                const amount = parseFloat(payment['Total Amount']);
-                if (amountRange === '0-1000') matchesAmount = amount <= 1000;
+                const amount = parseFloat(payment['Amount'] || 0);
+                if (amountRange === '0-1000')      matchesAmount = amount <= 1000;
                 else if (amountRange === '1000-2000') matchesAmount = amount > 1000 && amount <= 2000;
                 else if (amountRange === '2000-5000') matchesAmount = amount > 2000 && amount <= 5000;
-                else if (amountRange === '5000+') matchesAmount = amount > 5000;
+                else if (amountRange === '5000+')  matchesAmount = amount > 5000;
             }
 
             return matchesSearch && matchesStatus && matchesAmount;
         });
 
         displayPayments(filtered);
+        updateStats(filtered);
     }
 
     function clearFilters() {
-        document.getElementById('searchInput').value = '';
+        document.getElementById('searchInput').value  = '';
         document.getElementById('statusFilter').value = '';
         document.getElementById('amountFilter').value = '';
-        displayPayments(allPayments);
+
+        const urlParams     = new URLSearchParams(window.location.search);
+        const overdueFilter = urlParams.get('overdue') === 'true';
+
+        let filtered = allPayments;
+        if (overdueFilter) {
+            filtered = filtered.filter(p => p.Status === 'Overdue');
+        }
+
+        displayPayments(filtered);
+        updateStats(filtered);
+
+        const filterInfo = document.querySelector('.content-card-header h5');
+        if (filterInfo) {
+            filterInfo.innerHTML = '<i class="fas fa-table"></i> Payment Records';
+        }
     }
 
     function exportReport() {
         showToast('info', 'Export', 'Export functionality coming soon');
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            loadPaymentData();
-        }, 500);
+    function normalizePaymentStatus(status) {
+        if (status === 'Partially Paid') return 'Paid';
+        if (status === 'Overdue - Partial') return 'Overdue';
+        return status;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(() => { loadPaymentData(); }, 500);
+        // Set today's date as default for the record payment modal
+        document.getElementById('rpDate').valueAsDate = new Date();
+    });
+
+
+    // ─── Record Payment Modal Logic ────────────────────────────────────────────
+
+    /**
+     * Call this from the plots modal's "Record Payment" button:
+     *   onclick="openRecordPaymentModal(plotId, 'Block A - Sec 2 - Lot 5')"
+     *
+     * @param {number|string} plotId    – the plot's primary key
+     * @param {string}        plotLabel – human-readable plot identifier shown in the badge
+     */
+    function openRecordPaymentModal(plotId, plotLabel) {
+        rpCurrentPlotId = plotId;
+
+        // Reset form
+        resetRecordPaymentForm();
+
+        // Update header badge
+        document.getElementById('rpPlotLabel').textContent = plotLabel || `Plot ${plotId}`;
+
+        // Show overlay
+        document.getElementById('recordPaymentOverlay').classList.add('active');
+        document.getElementById('rpDate').focus();
+    }
+
+    function closeRecordPaymentModal() {
+        document.getElementById('recordPaymentOverlay').classList.remove('active');
+        rpCurrentPlotId = null;
+    }
+
+    // Close when clicking the dark backdrop (not the card itself)
+    function handleOverlayClick(e) {
+        if (e.target === document.getElementById('recordPaymentOverlay')) {
+            closeRecordPaymentModal();
+        }
+    }
+
+    function resetRecordPaymentForm() {
+        const fields = ['rpDate', 'rpOrNumber', 'rpPaidBy', 'rpAmount'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            el.value = '';
+            el.classList.remove('error');
+        });
+        ['rpDateErr', 'rpOrNumberErr', 'rpPaidByErr', 'rpAmountErr'].forEach(id => {
+            document.getElementById(id).classList.remove('show');
+        });
+        document.getElementById('rpSuccessBanner').classList.remove('show');
+        const btn = document.getElementById('rpSubmitBtn');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+
+        // Default date to today
+        document.getElementById('rpDate').valueAsDate = new Date();
+    }
+
+    function validateRecordPaymentForm() {
+        let valid = true;
+
+        const date     = document.getElementById('rpDate').value.trim();
+        const orNumber = document.getElementById('rpOrNumber').value.trim();
+        const paidBy   = document.getElementById('rpPaidBy').value.trim();
+        const amount   = document.getElementById('rpAmount').value;
+
+        if (!date) {
+            showRpError('rpDate', 'rpDateErr', 'Date is required.');
+            valid = false;
+        } else {
+            clearRpError('rpDate', 'rpDateErr');
+        }
+
+        if (!orNumber) {
+            showRpError('rpOrNumber', 'rpOrNumberErr', 'OR Number is required.');
+            valid = false;
+        } else {
+            clearRpError('rpOrNumber', 'rpOrNumberErr');
+        }
+
+        if (!paidBy) {
+            showRpError('rpPaidBy', 'rpPaidByErr', 'Paid By is required.');
+            valid = false;
+        } else {
+            clearRpError('rpPaidBy', 'rpPaidByErr');
+        }
+
+        if (!amount || parseFloat(amount) <= 0) {
+            showRpError('rpAmount', 'rpAmountErr', 'Enter a valid amount greater than 0.');
+            valid = false;
+        } else {
+            clearRpError('rpAmount', 'rpAmountErr');
+        }
+
+        return valid;
+    }
+
+    function showRpError(inputId, errId, msg) {
+        document.getElementById(inputId).classList.add('error');
+        const errEl = document.getElementById(errId);
+        errEl.textContent = msg;
+        errEl.classList.add('show');
+    }
+
+    function clearRpError(inputId, errId) {
+        document.getElementById(inputId).classList.remove('error');
+        document.getElementById(errId).classList.remove('show');
+    }
+
+    async function submitRecordPayment() {
+        if (!validateRecordPaymentForm()) return;
+
+        const btn = document.getElementById('rpSubmitBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        const payload = {
+            plot_id:   rpCurrentPlotId,
+            date:      document.getElementById('rpDate').value,
+            or_number: document.getElementById('rpOrNumber').value.trim(),
+            paid_by:   document.getElementById('rpPaidBy').value.trim(),
+            amount:    parseFloat(document.getElementById('rpAmount').value)
+        };
+
+        try {
+            const response = await fetch('/api/record_payment.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('rpSuccessBanner').classList.add('show');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+
+                // Reload the payment table in the background
+                loadPaymentData();
+
+                // Auto-close after a short delay so user can see the success banner
+                setTimeout(() => { closeRecordPaymentModal(); }, 1600);
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                showToast('error', 'Error', result.message || 'Failed to record payment. Please try again.');
+            }
+        } catch (err) {
+            console.error('Record payment error:', err);
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            showToast('error', 'Network Error', 'Could not connect. Please try again.');
+        }
+    }
+
+    // Keyboard shortcut: Escape closes the modal
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeRecordPaymentModal();
     });
 </script>

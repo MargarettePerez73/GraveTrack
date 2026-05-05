@@ -58,23 +58,31 @@ try {
     $updatePlotStmt->bindParam(':plot_id', $data['plot_id']);
     $updatePlotStmt->execute();
 
-    // Create initial rental record (3 year cycle, 2000 PHP)
+// Create initial rental record ONLY if none exists for this burial date (prevents duplicates)
     $rental_start = $data['date_of_burial'];
     $rental_end = date('Y-m-d', strtotime($rental_start . ' + 3 years'));
     $rental_amount = 2000.00;
 
-    $rentalQuery = "INSERT INTO rentals
-                    (deceased_id, plot_id, rental_start, rental_end, amount, status)
-                    VALUES
-                    (:deceased_id, :plot_id, :rental_start, :rental_end, :amount, 'Unpaid')";
+    // CHECK if rental already exists for this deceased + start date
+    $checkRental = $db->prepare("SELECT COUNT(*) FROM rentals WHERE deceased_id = :deceased_id AND rental_start = :rental_start");
+    $checkRental->bindParam(':deceased_id', $deceased_id);
+    $checkRental->bindParam(':rental_start', $rental_start);
+    $checkRental->execute();
+    
+    if ($checkRental->fetchColumn() == 0) {
+        $rentalQuery = "INSERT INTO rentals
+                        (deceased_id, plot_id, rental_start, rental_end, amount, status)
+                        VALUES
+                        (:deceased_id, :plot_id, :rental_start, :rental_end, :amount, 'Unpaid')";
 
-    $rentalStmt = $db->prepare($rentalQuery);
-    $rentalStmt->bindParam(':deceased_id', $deceased_id);
-    $rentalStmt->bindParam(':plot_id', $data['plot_id']);
-    $rentalStmt->bindParam(':rental_start', $rental_start);
-    $rentalStmt->bindParam(':rental_end', $rental_end);
-    $rentalStmt->bindParam(':amount', $rental_amount);
-    $rentalStmt->execute();
+        $rentalStmt = $db->prepare($rentalQuery);
+        $rentalStmt->bindParam(':deceased_id', $deceased_id);
+        $rentalStmt->bindParam(':plot_id', $data['plot_id']);
+        $rentalStmt->bindParam(':rental_start', $rental_start);
+        $rentalStmt->bindParam(':rental_end', $rental_end);
+        $rentalStmt->bindParam(':amount', $rental_amount);
+        $rentalStmt->execute();
+    }
 
     // Commit transaction
     $db->commit();

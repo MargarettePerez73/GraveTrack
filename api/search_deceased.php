@@ -6,7 +6,12 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
-require_once '../Database/db_connector.php';
+require_once __DIR__ . '/../Database/db_connector.php';
+if (!file_exists(__DIR__ . '/../Database/db_connector.php')) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'DB connector missing']);
+    exit;
+}
 
 session_start();
 
@@ -17,7 +22,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $db = new db_connector();
-$conn = $db->getConnection();
+$conn = $db->connect();
+if (!$conn) {
+    echo json_encode(['success' => false, 'message' => 'DB connection failed']);
+    exit;
+}
 
 // Get search term
 $searchTerm = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -59,10 +68,11 @@ try {
         'results' => $results
     ]);
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
+    error_log('Search API error: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Search error: ' . $e->getMessage()
     ]);
 }
 ?>

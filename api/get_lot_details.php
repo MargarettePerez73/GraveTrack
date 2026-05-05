@@ -28,21 +28,47 @@ try {
     }
 
     // Get all deceased records for this plot
-    $deceasedQuery = "SELECT
-                        d.deceased_id,
-                        d.full_name,
-                        d.birth_date,
-                        d.date_of_death,
-                        d.date_of_burial,
-                        d.gender,
-                        d.address,
-                        d.burial_type,
-                        c.contact_person,
-                        c.contact_number
-                      FROM deceased d
-                      LEFT JOIN contacts c ON d.deceased_id = c.deceased_id
-                      WHERE d.plot_id = :plot_id
-                      ORDER BY d.date_of_burial DESC";
+    $deceasedQuery = 
+    "SELECT
+        d.deceased_id,
+        d.full_name,
+        d.birth_date,
+        d.date_of_death,
+        d.date_of_burial,
+        d.gender,
+        d.address,
+        d.burial_type,
+
+        c.contact_person,
+        c.contact_number,
+
+        r.rental_id,
+        r.rental_start,
+        r.rental_end,
+        r.status AS rental_status,
+
+        CASE
+            WHEN r.rental_end < CURDATE() THEN 'Overdue'
+            ELSE 'Active'
+        END AS computed_status
+
+    FROM deceased d
+
+    LEFT JOIN contacts c 
+        ON d.deceased_id = c.deceased_id
+
+    LEFT JOIN rentals r 
+        ON r.rental_id = (
+            SELECT r2.rental_id
+            FROM rentals r2
+            WHERE r2.deceased_id = d.deceased_id
+            ORDER BY r2.rental_end DESC
+            LIMIT 1
+        )
+
+    WHERE d.plot_id = :plot_id
+
+    ORDER BY d.date_of_burial DESC";
 
     $deceasedStmt = $db->prepare($deceasedQuery);
     $deceasedStmt->bindParam(':plot_id', $plot_id);

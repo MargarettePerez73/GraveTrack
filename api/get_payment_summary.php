@@ -21,10 +21,13 @@ try {
                 CONCAT(p.block, ' - ', p.section, ' - ', p.lot) as 'Plot Location',
                 d.full_name as 'Deceased Name',
                 d.date_of_burial as 'Date of Burial',
+                MAX(pay.payment_id) as transaction_id,
+                MAX(pay.payment_date) as 'Date of Transaction',
                 r.rental_id,
                 r.rental_start,
                 r.rental_end,
                 r.amount as 'Rental Amount',
+                COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Amount',
                 COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Total Paid',
                 r.amount - COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Amount Due',
                 CASE 
