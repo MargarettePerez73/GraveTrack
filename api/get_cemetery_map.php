@@ -62,6 +62,8 @@ try {
                     WHEN p.status = 'Vacant' THEN 'Vacant'
                     WHEN NOT EXISTS (SELECT 1 FROM rentals r WHERE r.plot_id = p.plot_id) THEN 'Vacant'
                     ELSE CASE 
+                        -- Guardrail: if rental amount is 0/NULL, never show Paid automatically
+                        WHEN MAX(r.amount) IS NULL OR MAX(r.amount) <= 0 THEN 'Unpaid'
                         WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) >= MAX(r.amount) AND MAX(r.rental_end) >= CURDATE() THEN 'Paid'
                         WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) > 0 AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) < MAX(r.amount) THEN 'Partially Paid'
                         WHEN MAX(r.rental_end) < CURDATE() AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) = 0 THEN 'Overdue'

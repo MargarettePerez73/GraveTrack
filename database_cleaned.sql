@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 05, 2026 at 08:12 PM
+-- Generation Time: May 05, 2026 at 08:42 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -57,7 +57,10 @@ CREATE TABLE `contacts` (
 --
 
 INSERT INTO `contacts` (`contact_id`, `deceased_id`, `contact_person`, `contact_number`) VALUES
-(1, 24, 'jolo', '090777899876');
+(1, 24, 'jolo', '090777899876'),
+(2, 25, 'koi', '090777899876'),
+(3, 26, 'koi', NULL),
+(4, 27, 'koi', NULL);
 
 -- --------------------------------------------------------
 
@@ -83,7 +86,10 @@ CREATE TABLE `deceased` (
 --
 
 INSERT INTO `deceased` (`deceased_id`, `full_name`, `date_of_death`, `date_of_burial`, `gender`, `address`, `plot_id`, `burial_type`, `created_by`, `birth_date`) VALUES
-(24, 'marga', '2026-05-05', '2026-03-20', 'Female', 'fff', 1013, 'Ground', NULL, '2005-05-05');
+(24, 'marga', '2026-05-05', '2026-03-20', 'Female', 'fff', 1013, 'Ground', NULL, '2005-05-05'),
+(25, 'aaa', '2002-07-07', '2002-08-07', 'Female', NULL, 1013, 'Ground', NULL, '2002-07-07'),
+(26, 'aaa', '2022-06-06', '2022-06-14', 'Female', 'qqq', 1030, 'Ground', NULL, '2006-06-06'),
+(27, 'marga', '2021-06-06', '2021-06-13', NULL, 'www', 1030, 'Ground', NULL, NULL);
 
 --
 -- Triggers `deceased`
@@ -93,6 +99,52 @@ CREATE TRIGGER `after_burial_insert` AFTER INSERT ON `deceased` FOR EACH ROW BEG
     UPDATE plots
     SET status = 'Occupied'
     WHERE plot_id = NEW.plot_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_deceased_insert` AFTER INSERT ON `deceased` FOR EACH ROW BEGIN
+    IF NEW.plot_id IS NOT NULL THEN
+        -- Only create a rental if none exists yet for this deceased
+        IF NOT EXISTS (
+            SELECT 1 FROM rentals r
+            WHERE r.deceased_id = NEW.deceased_id
+            LIMIT 1
+        ) THEN
+            INSERT INTO `rentals` (
+                `deceased_id`,
+                `plot_id`,
+                `rental_start`,
+                `rental_end`,
+                `amount`,
+                `status`
+            ) VALUES (
+                NEW.deceased_id,
+                NEW.plot_id,
+                COALESCE(NEW.date_of_burial, CURDATE()),
+                DATE_ADD(COALESCE(NEW.date_of_burial, CURDATE()), INTERVAL 3 YEAR),
+                2000.00,
+                'Unpaid'
+            );
+        END IF;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `before_deceased_insert_limit_plot_capacity` BEFORE INSERT ON `deceased` FOR EACH ROW BEGIN
+    DECLARE plotCount INT DEFAULT 0;
+
+    IF NEW.plot_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO plotCount
+        FROM deceased
+        WHERE plot_id = NEW.plot_id;
+
+        IF plotCount >= 5 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Plot capacity exceeded: maximum 5 burial records per plot.';
+        END IF;
+    END IF;
 END
 $$
 DELIMITER ;
@@ -365,7 +417,7 @@ INSERT INTO `plots` (`plot_id`, `block`, `section`, `lot`, `type`, `status`, `da
 (1027, 'V', '1', '4', 'Single', 'Vacant', '2026-05-05 18:05:22'),
 (1028, 'V', '1', '5', 'Single', 'Vacant', '2026-05-05 18:05:22'),
 (1029, 'V', '2', '6', 'Single', 'Vacant', '2026-05-05 18:05:22'),
-(1030, 'V', '2', '7', 'Single', 'Vacant', '2026-05-05 18:05:22'),
+(1030, 'V', '2', '7', 'Single', 'Occupied', '2026-05-05 18:05:22'),
 (1031, 'V', '2', '8', 'Single', 'Vacant', '2026-05-05 18:05:22'),
 (1032, 'V', '2', '9', 'Single', 'Vacant', '2026-05-05 18:05:22'),
 (1033, 'V', '2', '10', 'Single', 'Vacant', '2026-05-05 18:05:22'),
@@ -529,7 +581,10 @@ CREATE TABLE `rentals` (
 --
 
 INSERT INTO `rentals` (`rental_id`, `deceased_id`, `plot_id`, `rental_start`, `rental_end`, `amount`, `status`, `processed_by`) VALUES
-(4, 24, 1013, '2026-03-20', '2029-03-20', 2000.00, 'Paid', NULL);
+(4, 24, 1013, '2026-03-20', '2029-03-20', 2000.00, 'Paid', NULL),
+(5, 25, 1013, '2002-08-07', '2005-08-07', 2000.00, 'Unpaid', NULL),
+(6, 26, 1030, '2022-06-14', '2025-06-14', 2000.00, 'Unpaid', NULL),
+(7, 27, 1030, '2021-06-13', '2024-06-13', 2000.00, 'Unpaid', NULL);
 
 -- --------------------------------------------------------
 
@@ -678,13 +733,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `contacts`
 --
 ALTER TABLE `contacts`
-  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `deceased`
 --
 ALTER TABLE `deceased`
-  MODIFY `deceased_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `deceased_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `payments`
@@ -702,7 +757,7 @@ ALTER TABLE `plots`
 -- AUTO_INCREMENT for table `rentals`
 --
 ALTER TABLE `rentals`
-  MODIFY `rental_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `rental_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `transactions`

@@ -399,6 +399,59 @@ include 'includes/header.php';
         font-weight: 700;
         font-size: 15px;
     }
+
+    .pay-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    @media (max-width: 576px) {
+        .pay-mini-grid { grid-template-columns: 1fr; }
+    }
+    .pay-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+    }
+    .pay-card-title {
+        font-size: 12px;
+        font-weight: 900;
+        color: #1e3a8a;
+        margin: 0 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pay-field label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        margin-bottom: 6px;
+    }
+    .pay-field input {
+        width: 100%;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .pay-field input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    .pay-context {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+    .pay-context strong { color: #1e3a8a; }
+    .pay-context small { color: #475569; }
     .payment-plot-info {
         background: #eff6ff;
         border: 1px solid #bfdbfe;
@@ -629,59 +682,48 @@ include 'includes/header.php';
 
             <div class="modal-body">
 
-                <!-- Plot context info -->
-                <div class="payment-plot-info" id="paymentPlotInfo">
-                    <strong id="paymentPlotTitle">Plot Details</strong><br>
-                    <span id="paymentPlotSubtitle" class="text-muted" style="font-size:12px;"></span>
-                </div>
-
-                <!-- OR Number -->
-                <div class="payment-form-group">
-                    <label for="payOrNumber">
-                        OR Number <span class="required-star">*</span>
-                    </label>
-                    <input type="text"
-                           id="payOrNumber"
-                           placeholder="e.g. OR-2024-001234"
-                           maxlength="50">
-                    <div class="invalid-feedback">OR Number is required.</div>
-                </div>
-
-                <!-- Paid By -->
-                <div class="payment-form-group">
-                    <label for="payPaidBy">
-                        Paid By <span class="required-star">*</span>
-                    </label>
-                    <input type="text"
-                           id="payPaidBy"
-                           placeholder="Full name of payer"
-                           maxlength="100">
-                    <div class="invalid-feedback">Payer name is required.</div>
-                </div>
-
-                <!-- Amount -->
-                <div class="payment-form-group">
-                    <label for="payAmount">
-                        Amount <span class="required-star">*</span>
-                    </label>
-                    <div class="payment-amount-prefix">
-                        <span>₱</span>
-                        <input type="number"
-                               id="payAmount"
-                               placeholder="0.00"
-                               min="0.01"
-                               step="0.01">
+                <div class="pay-card pay-context mb-2" id="paymentPlotInfo">
+                    <div class="pay-card-title">
+                        <i class="fas fa-map-marker-alt"></i> Payment Context
                     </div>
-                    <div class="invalid-feedback">A valid amount greater than 0 is required.</div>
+                    <div>
+                        <strong id="paymentPlotTitle">Plot Details</strong><br>
+                        <small id="paymentPlotSubtitle"></small>
+                    </div>
                 </div>
 
-                <!-- Payment Date -->
-                <div class="payment-form-group">
-                    <label for="payDate">
-                        Payment Date <span class="required-star">*</span>
-                    </label>
-                    <input type="date" id="payDate">
-                    <div class="invalid-feedback">Payment date is required.</div>
+                <div class="pay-mini-grid">
+                    <div class="pay-card">
+                        <div class="pay-card-title">
+                            <i class="fas fa-receipt"></i> Receipt Details
+                        </div>
+                        <div class="pay-field mb-2">
+                            <label for="payOrNumber">OR Number <span class="required-star">*</span></label>
+                            <input type="text" id="payOrNumber" placeholder="e.g. OR-2024-001234" maxlength="50">
+                            <div class="invalid-feedback">OR Number is required.</div>
+                        </div>
+                        <div class="pay-field">
+                            <label for="payDate">Payment Date <span class="required-star">*</span></label>
+                            <input type="date" id="payDate">
+                            <div class="invalid-feedback">Payment date is required.</div>
+                        </div>
+                    </div>
+
+                    <div class="pay-card">
+                        <div class="pay-card-title">
+                            <i class="fas fa-user"></i> Payer & Amount
+                        </div>
+                        <div class="pay-field mb-2">
+                            <label for="payPaidBy">Contact Person (Payer) <span class="required-star">*</span></label>
+                            <input type="text" id="payPaidBy" placeholder="No contact on file" maxlength="100">
+                            <div class="invalid-feedback">Contact person is required.</div>
+                        </div>
+                        <div class="pay-field">
+                            <label for="payAmount">Amount <span class="required-star">*</span></label>
+                            <input type="number" id="payAmount" placeholder="0.00" min="0.01" step="0.01">
+                            <div class="invalid-feedback">A valid amount greater than 0 is required.</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Hidden fields used for API payload -->
@@ -1048,6 +1090,23 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
                 });
 
                 content += `</div>`;
+
+                if (data.deceased_records.length < 5) {
+                    content += `
+                        <div class="text-center mt-3">
+                            <a href="adding_burial_records.php?plot_id=${plotId}"
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-plus"></i> Add Another Burial (Max 5)
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    content += `
+                        <div class="alert alert-secondary mt-3 mb-0">
+                            <i class="fas fa-lock"></i> This plot has reached the maximum of 5 burial records.
+                        </div>
+                    `;
+                }
             } else {
                 content += `
                     <div class="plot-section-title">
@@ -1223,7 +1282,7 @@ async function deleteDeceasedRecord(deceasedId, fullName) {
  * Opens the payment modal, pre-filling plot context.
  * Called from the "Record Payment" button injected inside the plot detail modal.
  */
-function openPaymentModal(plotId, block, section, lot, rentalId = null, deceasedId = null, deceasedName = '') {
+async function openPaymentModal(plotId, block, section, lot, rentalId = null, deceasedId = null, deceasedName = '') {
     /* Reset the form */
     ['payOrNumber', 'payPaidBy', 'payAmount', 'payDate'].forEach(id => {
         const el = document.getElementById(id);
@@ -1248,6 +1307,30 @@ function openPaymentModal(plotId, block, section, lot, rentalId = null, deceased
         deceasedName
             ? `Plot ID: ${plotId} | Deceased: ${deceasedName}`
             : `Plot ID: ${plotId}`;
+
+    // Auto-fill payer as Contact Person from DB (if available)
+    const paidByEl = document.getElementById('payPaidBy');
+    paidByEl.readOnly = false;
+    paidByEl.placeholder = 'No contact on file';
+
+    try {
+        if (plotId && deceasedId) {
+            const resp = await fetch(`/api/get_lot_details.php?plot_id=${plotId}`, { credentials: 'include' });
+            const details = await resp.json();
+            if (details && details.success && Array.isArray(details.deceased_records)) {
+                const match = details.deceased_records.find(r => String(r.deceased_id) === String(deceasedId));
+                const contactName = match?.contact_person ? String(match.contact_person).trim() : '';
+                if (contactName) {
+                    paidByEl.value = contactName;
+                    paidByEl.readOnly = true;
+                    paidByEl.placeholder = '';
+                }
+            }
+        }
+    } catch (e) {
+        // If fetch fails, allow manual input (still validated as required)
+        console.warn('Failed to auto-fill contact person for payer:', e);
+    }
 
     /* Hide the plot modal and show the payment modal */
     const plotModalEl = document.getElementById('plotModal');

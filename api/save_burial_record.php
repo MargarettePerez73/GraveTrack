@@ -31,6 +31,15 @@ try {
     // Start transaction
     $db->beginTransaction();
 
+    // Enforce max 5 deceased per plot (tombstone capacity)
+    $capacityCheck = $db->prepare("SELECT COUNT(*) FROM deceased WHERE plot_id = :plot_id FOR UPDATE");
+    $capacityCheck->bindParam(':plot_id', $data['plot_id']);
+    $capacityCheck->execute();
+    $existingCount = (int)$capacityCheck->fetchColumn();
+    if ($existingCount >= 5) {
+        throw new Exception("This plot already has 5 burial records (maximum allowed per plot).");
+    }
+
     // Insert deceased record
     $deceasedQuery = "INSERT INTO deceased
                       (full_name, date_of_death, date_of_burial, gender, address, plot_id, burial_type, birth_date)

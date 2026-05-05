@@ -106,7 +106,7 @@ include 'includes/header.php';
                         <div class="form-group">
                             <label class="form-label">Select Plot <span class="text-danger">*</span></label>
                             <select class="form-control" id="plot_id" required onchange="showPlotInfo()">
-                                <option value="">-- Select Vacant Plot --</option>
+                                <option value="">-- Select Plot (Vacant or Available) --</option>
                             </select>
                             <small id="plotInfo" class="form-text text-muted"></small>
                         </div>
@@ -177,7 +177,7 @@ include 'includes/header.php';
 <?php include 'includes/footer.php'; ?>
 
 <script>
-    let vacantPlots = [];
+    let availablePlots = [];
 
     async function loadVacantPlots() {
         try {
@@ -185,18 +185,24 @@ include 'includes/header.php';
             const data = await response.json();
 
             if (data.success) {
-                vacantPlots = data.data;
+                availablePlots = data.data;
                 const select = document.getElementById('plot_id');
-                select.innerHTML = '<option value="">-- Select Vacant Plot --</option>';
+                select.innerHTML = '<option value="">-- Select Plot (Vacant or Available) --</option>';
 
-                vacantPlots.forEach(plot => {
+                availablePlots.forEach(plot => {
                     const option = document.createElement('option');
                     option.value = plot.plot_id;
-                    option.textContent = plot.label + ` (${plot.type})`;
+                    const countText = (plot.deceased_count !== undefined && plot.deceased_count !== null)
+                        ? ` | ${plot.deceased_count}/5`
+                        : '';
+                    const statusText = plot.status ? ` | ${plot.status}` : '';
+                    option.textContent = plot.label + ` (${plot.type}${statusText}${countText})`;
                     option.dataset.type = plot.type;
                     option.dataset.block = plot.block;
                     option.dataset.section = plot.section;
                     option.dataset.lot = plot.lot;
+                    option.dataset.status = plot.status || '';
+                    option.dataset.deceasedCount = plot.deceased_count ?? '';
                     select.appendChild(option);
                 });
 
@@ -247,13 +253,19 @@ include 'includes/header.php';
             const block = selectedOption.dataset.block;
             const section = selectedOption.dataset.section;
             const lot = selectedOption.dataset.lot;
+            const status = selectedOption.dataset.status || '';
+            const deceasedCount = selectedOption.dataset.deceasedCount;
 
             // Auto-fill the text fields
             document.getElementById('plot_block').value = block || '';
             document.getElementById('plot_section').value = section || '';
             document.getElementById('plot_lot').value = lot || '';
 
-            plotInfo.textContent = `Plot Type: ${type} | Rental: ₱2,000 per 3 years`;
+            const capacityText = deceasedCount !== '' && deceasedCount !== undefined
+                ? ` | Capacity: ${deceasedCount}/5`
+                : '';
+            const statusText = status ? ` | Status: ${status}` : '';
+            plotInfo.textContent = `Plot Type: ${type}${statusText}${capacityText} | Rental: ₱2,000 per 3 years`;
             plotInfo.style.color = '#10b981';
         } else {
             plotInfo.textContent = '';

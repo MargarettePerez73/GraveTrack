@@ -6,16 +6,24 @@ try {
     $database = new db_connector();
     $db = $database->connect();
 
+    // Allow selection of:
+    // - Vacant plots
+    // - Occupied plots that still have capacity (< 5 deceased)
     $query = "SELECT
-                plot_id,
-                CONCAT('Block ', block, ', Section ', section, ', Lot ', lot) as label,
-                block,
-                section,
-                lot,
-                type
-              FROM plots
-              WHERE status = 'Vacant'
-              ORDER BY block, section, lot";
+                p.plot_id,
+                CONCAT('Block ', p.block, ', Section ', p.section, ', Lot ', p.lot) as label,
+                p.block,
+                p.section,
+                p.lot,
+                p.type,
+                p.status,
+                COUNT(d.deceased_id) AS deceased_count
+              FROM plots p
+              LEFT JOIN deceased d ON p.plot_id = d.plot_id
+              WHERE p.status IN ('Vacant','Occupied')
+              GROUP BY p.plot_id
+              HAVING (p.status = 'Vacant' OR (p.status = 'Occupied' AND COUNT(d.deceased_id) < 5))
+              ORDER BY p.block, p.section, p.lot";
 
     $stmt = $db->prepare($query);
     $stmt->execute();
