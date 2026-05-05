@@ -7,68 +7,142 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f9fa;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #f1f5f9, #e2e8f0);
         }
 
         /* Header */
         .public-header {
-            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #2563eb 100%);
             color: white;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 30px 20px;
+            box-shadow: 0 8px 24px rgba(30, 58, 138, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .public-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
         }
 
         .public-header h1 {
             margin: 0;
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 36px;
+            font-weight: 800;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .public-header p {
-            margin: 5px 0 0 0;
-            opacity: 0.9;
-            font-size: 14px;
+            margin: 8px 0 0 0;
+            opacity: 0.95;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
         }
 
         .login-btn {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 30px;
+            right: 30px;
             background: white;
             color: #1e3a8a;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2;
         }
 
         .login-btn:hover {
-            background: #f1f5f9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: #fbbf24;
+            color: #1e3a8a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         }
 
         /* Search Bar */
         .search-section {
             background: white;
-            padding: 15px 20px;
-            border-bottom: 2px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px 30px;
+            border-bottom: 3px solid #3b82f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .search-section .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px 0 0 8px;
+            padding: 12px 16px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-section .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-section .btn {
+            padding: 12px 20px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .search-section .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 0;
+        }
+
+        .search-section .btn-primary:hover {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+        }
+
+        .search-section .btn-secondary {
+            background: #64748b;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .search-section .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .info-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         /* Map Container */
         .cemetery-page {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 150px);
+            height: calc(100vh - 220px);
             overflow: hidden;
         }
 
@@ -78,8 +152,8 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: #f5f5f5;
-            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 30px;
         }
 
         .map-scaler {
@@ -89,12 +163,13 @@
 
         .map-inner {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
             display: inline-flex;
             flex-direction: column;
             align-items: flex-start;
+            border: 1px solid #e2e8f0;
         }
 
         .all-blocks {
@@ -104,82 +179,167 @@
         }
 
         .phase-divider {
-            width: 4px;
-            background: #64748b;
+            width: 5px;
+            background: linear-gradient(to bottom, #3b82f6, #1e3a8a);
             align-self: stretch;
             flex-shrink: 0;
-            margin: 0 8px;
+            margin: 0 10px;
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
         }
 
-        .pair-gap { width: 12px; flex-shrink: 0; }
+        .pair-gap { width: 14px; flex-shrink: 0; }
 
         .block-col {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 4px;
+            padding: 0 5px;
         }
 
         .block-label {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 900;
             color: #1e3a8a;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 2px solid #3b82f6;
         }
 
         .plots-stack {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 4px;
         }
 
-        /* Plot Box - Simple Grey */
+        /* Plot Box - Enhanced Visual */
         .lot-box {
-            width: 50px;
-            height: 20px;
-            border-radius: 4px;
-            border: 2px solid #94a3b8;
+            width: 52px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #cbd5e1;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.2s ease;
             position: relative;
-            background: #e2e8f0;
-            color: #475569;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            color: #64748b;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .lot-box:hover {
-            transform: scale(1.25);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
             z-index: 100;
-            background: #cbd5e1;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-color: #3b82f6;
         }
 
         .lot-box.occupied {
-            background: #94a3b8;
-            border-color: #64748b;
+            background: linear-gradient(135deg, #64748b, #475569);
+            border-color: #334155;
             color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .lot-box.occupied:hover {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-color: #1e3a8a;
+            box-shadow: 0 8px 24px rgba(30, 58, 138, 0.4);
         }
 
         .phase-labels-row {
             display: flex;
             width: 100%;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 3px solid #1e3a8a;
-            font-size: 14px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 4px solid;
+            border-image: linear-gradient(to right, #1e3a8a, #3b82f6, #1e3a8a) 1;
+            font-size: 15px;
             font-weight: 900;
             color: #1e3a8a;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
         .phase-label-cell {
             text-align: center;
             text-transform: uppercase;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Modal Enhancements */
+        .modal-header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            border-bottom: none;
+        }
+
+        .modal-title {
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-body .table {
+            margin-top: 15px;
+        }
+
+        .modal-body .table thead {
+            background: #f1f5f9;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        /* Legend Box */
+        .legend-box {
+            display: inline-flex;
+            gap: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .legend-color.vacant {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-color: #cbd5e1;
+        }
+
+        .legend-color.occupied {
+            background: linear-gradient(135deg, #64748b, #475569);
+            border-color: #334155;
         }
     </style>
 </head>
@@ -209,9 +369,9 @@
                     </div>
                 </div>
                 <div class="col-md-6 text-end">
-                    <small class="text-muted">
+                    <span class="info-badge">
                         <i class="fas fa-info-circle"></i> Click on any plot to view details
-                    </small>
+                    </span>
                 </div>
             </div>
         </div>
@@ -220,11 +380,23 @@
     <!-- Map -->
     <div class="cemetery-page">
         <div class="map-outer" id="mapOuter">
-            <div class="map-scaler" id="mapScaler">
-                <div class="map-inner" id="mapInner">
-                    <div class="text-center py-5">
-                        <div class="spinner-border" role="status"></div>
-                        <p class="mt-2">Loading cemetery map...</p>
+            <div style="text-align: center; width: 100%;">
+                <div class="legend-box" style="display: inline-flex;">
+                    <div class="legend-item">
+                        <div class="legend-color vacant"></div>
+                        <span>Vacant Plot</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color occupied"></div>
+                        <span>Occupied Plot</span>
+                    </div>
+                </div>
+                <div class="map-scaler" id="mapScaler">
+                    <div class="map-inner" id="mapInner">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Loading cemetery map...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -372,10 +544,18 @@
             for (let lot = lotsCount; lot >= 1; lot--) {
                 const plot = findPlot(blockName, lot, phaseName);
                 const isOccupied = plot && plot.status === 'Occupied';
-                const plotId = plot ? plot.plot_id : 'null';
-                const tooltip = plot ?
-                    `Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot}` :
-                    `Block ${blockName || 'Unnamed'}, Lot ${lot}`;
+                const plotId = plot ? plot.plot_id : null;
+                const displayBlock = blockName || 'Unnamed';
+
+                let tooltip = '';
+                if (plot) {
+                    tooltip = `Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot}`;
+                    if (plot.deceased_count > 0) {
+                        tooltip += ` (${plot.deceased_count} deceased)`;
+                    }
+                } else {
+                    tooltip = `Block ${displayBlock}, Lot ${lot} - Vacant`;
+                }
 
                 html += `
                     <div class="lot-box ${isOccupied ? 'occupied' : ''}"
@@ -391,13 +571,14 @@
         }
 
         async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
-            if (plotId === 'null' || !plotId) {
+            if (!plotId || plotId === null) {
                 const displayBlock = blockName || 'Unnamed';
-                document.getElementById('modalTitle').textContent = `Plot: Block ${displayBlock}, Lot ${lotNumber}`;
+                document.getElementById('modalTitle').innerHTML =
+                    `<i class="fas fa-map-marker-alt"></i> Block ${displayBlock}, Lot ${lotNumber}`;
                 document.getElementById('plotModalContent').innerHTML = `
-                    <div class="alert alert-info">
-                        <p><strong>Vacant Plot</strong></p>
-                        <p>This plot is currently vacant.</p>
+                    <div class="alert alert-info" style="background: #dbeafe; border: 2px solid #3b82f6; color: #1e40af;">
+                        <h6 style="margin-bottom: 10px;"><i class="fas fa-check-circle"></i> Vacant Plot</h6>
+                        <p style="margin-bottom: 0;">This plot is currently available and not occupied.</p>
                     </div>
                 `;
 
@@ -411,23 +592,28 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    document.getElementById('modalTitle').textContent =
-                        `Plot: Block ${data.plot.block}, Section ${data.plot.section}, Lot ${data.plot.lot}`;
+                    document.getElementById('modalTitle').innerHTML =
+                        `<i class="fas fa-map-marker-alt"></i> Block ${data.plot.block}, Section ${data.plot.section}, Lot ${data.plot.lot}`;
 
                     let content = '<div class="row mb-3">';
-                    content += '<div class="col-md-12">';
-                    content += `<p><strong>Type:</strong> ${data.plot.type}</p>`;
-                    content += '</div></div>';
+                    content += '<div class="col-md-6">';
+                    content += `<p><strong><i class="fas fa-monument"></i> Type:</strong> ${data.plot.type}</p>`;
+                    content += '</div>';
+                    content += '<div class="col-md-6">';
+                    content += `<p><strong><i class="fas fa-info-circle"></i> Status:</strong> <span class="badge bg-secondary">Occupied</span></p>`;
+                    content += '</div>';
+                    content += '</div>';
 
                     if (data.deceased_records && data.deceased_records.length > 0) {
-                        content += '<hr><h6><strong>Deceased Information:</strong></h6>';
-                        content += '<div class="table-responsive"><table class="table table-sm table-bordered">';
-                        content += '<thead><tr><th>Name</th><th>Date of Birth</th><th>Date of Death</th></tr></thead><tbody>';
+                        content += '<hr style="margin: 20px 0; border-top: 2px solid #e2e8f0;">';
+                        content += '<h6 style="color: #1e3a8a; font-weight: 700; margin-bottom: 15px;"><i class="fas fa-user"></i> Deceased Information</h6>';
+                        content += '<div class="table-responsive"><table class="table table-hover">';
+                        content += '<thead><tr><th><i class="fas fa-user-circle"></i> Full Name</th><th><i class="fas fa-birthday-cake"></i> Date of Birth</th><th><i class="fas fa-cross"></i> Date of Death</th></tr></thead><tbody>';
 
                         data.deceased_records.forEach(record => {
                             content += `
                                 <tr>
-                                    <td><strong>${record.full_name}</strong></td>
+                                    <td><strong style="color: #1e3a8a;">${record.full_name}</strong></td>
                                     <td>${formatDate(record.birth_date)}</td>
                                     <td>${formatDate(record.date_of_death)}</td>
                                 </tr>
@@ -435,17 +621,35 @@
                         });
 
                         content += '</tbody></table></div>';
+
+                        if (data.deceased_records.length > 1) {
+                            content += `<p class="text-muted text-end" style="font-size: 12px; margin-top: 10px;"><i class="fas fa-users"></i> ${data.deceased_records.length} persons interred in this plot</p>`;
+                        }
                     } else {
-                        content += '<hr><p class="text-muted text-center">No records available</p>';
+                        content += '<hr><div class="alert alert-secondary text-center" style="margin-top: 20px;"><i class="fas fa-info-circle"></i> No deceased records available for this plot</div>';
                     }
 
                     document.getElementById('plotModalContent').innerHTML = content;
 
                     const modal = new bootstrap.Modal(document.getElementById('plotModal'));
                     modal.show();
+                } else {
+                    console.error('Failed to load plot details:', data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load plot details',
+                        confirmButtonColor: '#1e3a8a'
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to fetch plot information',
+                    confirmButtonColor: '#1e3a8a'
+                });
             }
         }
 
@@ -480,24 +684,32 @@
                 viewPlotDetails(results[0].plot_id, results[0].block, results[0].lot, 'Phase ' + results[0].phase);
                 highlightPlot(results[0].block, results[0].lot);
             } else {
-                let html = '<div class="list-group">';
+                let html = '<div class="list-group" style="max-height: 400px; overflow-y: auto;">';
                 results.forEach(record => {
                     html += `
                         <a href="#" class="list-group-item list-group-item-action"
+                           style="border-left: 4px solid #3b82f6; margin-bottom: 8px; border-radius: 6px;"
                            onclick="viewPlotDetails(${record.plot_id}, '${record.block}', ${record.lot}, 'Phase ${record.phase}'); highlightPlot('${record.block}', ${record.lot}); return false;">
-                            <strong>${record.full_name}</strong><br>
-                            <small>Block ${record.block}, Section ${record.section}, Lot ${record.lot}</small><br>
-                            <small class="text-muted">Born: ${formatDate(record.birth_date)} | Died: ${formatDate(record.date_of_death)}</small>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-user-circle" style="font-size: 24px; color: #64748b;"></i>
+                                <div style="flex: 1;">
+                                    <strong style="color: #1e3a8a; font-size: 16px;">${record.full_name}</strong><br>
+                                    <small style="color: #64748b;"><i class="fas fa-map-marker-alt"></i> Block ${record.block}, Section ${record.section}, Lot ${record.lot}</small><br>
+                                    <small style="color: #94a3b8;"><i class="fas fa-calendar"></i> Born: ${formatDate(record.birth_date)} | <i class="fas fa-cross"></i> Died: ${formatDate(record.date_of_death)}</small>
+                                </div>
+                                <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+                            </div>
                         </a>
                     `;
                 });
                 html += '</div>';
 
                 Swal.fire({
-                    title: `Found ${results.length} Results`,
+                    title: `<i class="fas fa-search"></i> Found ${results.length} Results`,
                     html: html,
-                    width: '500px',
-                    confirmButtonColor: '#1e3a8a'
+                    width: '600px',
+                    confirmButtonColor: '#1e3a8a',
+                    confirmButtonText: 'Close'
                 });
             }
         }
@@ -543,8 +755,8 @@
 
             scaler.style.transform = 'scale(1)';
 
-            const availW = outer.clientWidth - 40;
-            const availH = outer.clientHeight - 40;
+            const availW = outer.clientWidth - 60;
+            const availH = outer.clientHeight - 120;
             const natW = inner.scrollWidth;
             const natH = inner.scrollHeight;
 
