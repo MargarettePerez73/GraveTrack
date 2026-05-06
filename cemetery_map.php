@@ -589,6 +589,14 @@ include 'includes/header.php';
         </div>
 
         <div class="sidebar-section">
+            <h6><i class="fas fa-layer-group"></i> AA Block Section (Phase 3)</h6>
+            <select id="aaStaffSectionSelect" class="filter-input" onchange="changeAAStaffSection(this.value)">
+                <option value="1">Section 1 (Default)</option>
+                <option value="2">Section 2</option>
+                <option value="3">Section 3</option>
+            </select>
+        </div>
+        <div class="sidebar-section">
             <h6><i class="fas fa-map"></i> Legend</h6>
 
             <div id="engineerLegend" style="display:none;">
@@ -780,6 +788,14 @@ let userRole          = '';
 const LOTS_PER_BLOCK  = 20;
 let allDeceasedRecords = [];
 let searchTimeout     = null;
+let currentAAStaffSection = '1';
+
+function changeAAStaffSection(section) {
+    currentAAStaffSection = section;
+    document.getElementById('aaStaffSectionSelect').value = section;
+    renderCemeteryMap();
+    scaleMap();
+}
 
 /* ─── Data loading ─── */
 
@@ -929,7 +945,11 @@ function renderCemeteryMap() {
 
     let html = '<div class="all-blocks" id="allBlocks">';
 
-    html += renderBlockColumn('AA', 'Phase 3', findPlot, 20);
+    for (let sec = 1; sec <= 3; sec++) {
+        if (sec == 1 || currentAAStaffSection === sec.toString()) {
+            html += renderBlockColumn('AA', 'Phase 3', findPlot, 20);
+        }
+    }
     html += renderBlockColumn('',   'Phase 3', findPlot, 10);
 
     html += '<div class="phase-divider"></div>';

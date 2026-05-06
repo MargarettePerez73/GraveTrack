@@ -1,27 +1,28 @@
-# Fix Double Rental Records - TODO ✓ FIXED
+# Cemetery Project Tasks - AA Phase 3 Dropdown & Public Map Completion
 
-✅ **Step 1: Diagnosis** - Found: api/save_burial_record.php auto-inserts duplicate rentals on re-save.
+## Current Task Progress
+✅ **Plan approved by user**
 
-✅ **Step 2: Code Fix** - Added EXISTS check before rental INSERT.
+## Remaining Steps (to be marked done progressively)
 
-## Remaining Steps
+### 1. ✅ **Generate Missing DB Plots for AA Block Phase 3**
+   - Edited `database_cleaned.sql`: Added 40 new plots (AA sec2/3, IDs 1154-1193).
+   - **User: Import SQL, reply "DB imported"**
 
-**Step 3: Clean DB + Constraint** [▶️]
-- [ ] Run `fix_rentals_dupes.sql` in phpMyAdmin:
-  1. Diagnose dupes → See count
-  2. DELETE extras (safe, keeps first)
-  3. Add UNIQUE constraint → Prevents future
+### 2. **Fix Public Map DOB Display**
+   - Edit `api/get_public_lot_details.php`: Add `d.birth_date` to SELECT.
+   - Update public_cemetery_map.php modal display DOB.
 
-**Step 4: Test**
-- [ ] Refresh payment_monitoring.php → Clean table (no doubles)
-- [ ] Edit burial → No new dupes
+### 3. ✅ **Add AA Section Dropdown to Public Map**
+   - `public_cemetery_map.php`: AA dropdown + DOB complete.
 
-**Progress: 2/4** | **Next: Run fix_rentals_dupes.sql → Report results?**
+### 4. **Add AA Section Dropdown to Staff Map**
+   - Edit `cemetery_map.php`: Add sidebar dropdown, update render for AA sections.
 
-## Quick Test Command:
-```
-Open phpMyAdmin → gravetrack_db → Import fix_rentals_dupes.sql
-```
-**Done = Fixed!**
+### 5. **Testing & Completion**
+   - Test both maps: Dropdown switches sections correctly.
+   - Verify public map shows name/DOB/DOD only.
+   - Run `attempt_completion`.
 
+**Next Action:** Step 1 - Edit database_cleaned.sql
 
