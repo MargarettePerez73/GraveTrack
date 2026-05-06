@@ -1,692 +1,893 @@
 <?php
-$pageTitle   = 'Public Cemetery Map';
-$currentPage = 'public_cemetery_map';
-include 'includes/header.php';
+$pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $pageTitle; ?></title>
 
-<style>
-    *, *::before, *::after { box-sizing: border-box; }
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    .cemetery-layout {
-        display: flex;
-        height: calc(100vh - 60px);
-        overflow: hidden;
-    }
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    /* Sidebar */
-    .cemetery-sidebar {
-        width: 320px;
-        background: white;
-        border-right: 3px solid #e2e8f0;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-    }
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
 
-    .sidebar-section {
-        padding: 20px;
-        border-bottom: 2px solid #f1f5f9;
-    }
+        .overdue-compact {
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 1rem !important;
+            font-size: 0.875rem;
+        }
+        .overdue-compact .btn {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
 
-    .sidebar-section h6 {
-        font-weight: 700;
-        color: #1e3a8a;
-        margin-bottom: 15px;
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+        #plotModal .modal-header {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
+        #plotModal .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        #plotModal .modal-title {
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 0.2px;
+        }
+        .plot-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 576px) {
+            .plot-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        .plot-mini-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 10px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+            min-width: 0;
+        }
+        .plot-mini-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 3px;
+            display: block;
+        }
+        .plot-mini-value {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .plot-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 12px 0 8px;
+        }
+        .plot-section-title h6 {
+            margin: 0;
+            font-weight: 800;
+            color: #1e3a8a;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+        .deceased-cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .deceased-cards { grid-template-columns: 1fr; }
+        }
+        .deceased-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+        }
+        .deceased-name {
+            font-weight: 900;
+            color: #0f172a;
+            font-size: 13px;
+            line-height: 1.2;
+            margin: 0 0 6px;
+        }
+        .deceased-meta {
+            font-size: 12px;
+            color: #475569;
+            margin: 0;
+            line-height: 1.35;
+        }
+        .deceased-meta small { color: #64748b; }
 
-    /* Public view badge */
-    .public-view-badge {
-        background: linear-gradient(135deg, #059669, #10b981);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 13px;
-        text-align: center;
-        margin-bottom: 15px;
-    }
+        /* ── Simple Header ── */
+        .simple-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 8px rgba(30,58,138,0.2);
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-brand-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .header-title {
+            font-size: 17px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 0.3px;
+        }
+        .header-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            margin: 0;
+            font-weight: 500;
+        }
 
-    /* Search Box */
-    .search-box { position: relative; }
+        /* ── Simple Filter Bar (Top) ── */
+        .filter-bar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .filter-bar .search-box {
+            position: relative;
+        }
+        .filter-bar .search-box input {
+            width: 100%;
+            padding: 10px 42px 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.25s;
+            background: #f8fafc;
+        }
+        .filter-bar .search-box input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+        .filter-bar .search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .filter-bar .aa-filter {
+            min-width: 160px;
+        }
+        .filter-bar .form-select {
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: white;
+            font-weight: 600;
+            color: #334155;
+        }
+        .filter-bar .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
 
-    .search-box input {
-        width: 100%;
-        padding: 10px 40px 10px 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.3s;
-    }
+        /* Search Results Dropdown */
+        .search-results {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 0;
+            max-height: 380px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 1000;
+            display: none;
+        }
+        .search-results.active { display: block; }
+        .search-result-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .search-result-item:hover { background: #f1f5f9; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-name  { font-weight: 700; color: #1e293b; font-size: 14px; }
+        .search-result-location { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .search-result-dates { font-size: 12px; color: #475569; margin-top: 3px; }
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
 
-    .search-box input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-    }
+        /* ── Map Layout ── */
+        .cemetery-layout {
+            display: flex;
+            min-height: calc(100vh - 124px);
+            overflow: hidden;
+        }
 
-    .search-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-    }
+        /* Sidebar */
+        .cemetery-sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
 
-    /* Simplified Legend - Public only shows vacant/occupied */
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-        font-size: 13px;
-    }
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
 
-    .legend-box {
-        width: 30px;
-        height: 16px;
-        border-radius: 4px;
-        border: 2px solid;
-        flex-shrink: 0;
-    }
+        .sidebar-section h6 {
+            font-weight: 800;
+            color: #1e3a8a;
+            margin-bottom: 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
 
-    .legend-box.vacant    { background: #10b981; border-color: #059669; }
-    .legend-box.occupied  { background: #ef4444; border-color: #dc2626; }
+        /* Legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #475569;
+        }
+        .legend-box {
+            width: 26px;
+            height: 16px;
+            border-radius: 4px;
+            border: 2px solid;
+            flex-shrink: 0;
+        }
+        .legend-box.occupied { background: #ef4444; border-color: #dc2626; }
+        .legend-box.vacant { background: #10b981; border-color: #059669; }
 
-    /* Stats */
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background: #f8fafc;
-        border-radius: 6px;
-        margin-bottom: 8px;
-    }
+        /* Stats */
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 18px; font-weight: 800; color: #1e3a8a; }
 
-    .stat-label { font-size: 12px; color: #64748b; font-weight: 600; }
-    .stat-value { font-size: 16px; font-weight: 700; color: #1e3a8a; }
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f1f5f9;
+            padding: 24px;
+        }
 
-    /* Map Container */
-    .map-container {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background: #f5f5f5;
-        padding: 20px;
-    }
+        .map-scaler { transform-origin: center center; display: inline-block; }
 
-    .map-scaler {
-        transform-origin: center center;
-        display: inline-block;
-    }
+        .map-inner {
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-    .map-inner {
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        display: inline-flex;
-        flex-direction: column;
-        align-items: flex-start;
-    }
+        .all-blocks { display: flex; align-items: flex-end; gap: 0; }
 
-    .all-blocks { display: flex; align-items: flex-end; gap: 0; }
+        .phase-divider {
+            width: 5px;
+            background: #64748b;
+            align-self: stretch;
+            flex-shrink: 0;
+            margin: 0 10px;
+            border-radius: 3px;
+        }
 
-    .phase-divider {
-        width: 4px;
-        background: #1e3a8a;
-        align-self: stretch;
-        flex-shrink: 0;
-        margin: 0 8px;
-    }
+        .pair-gap { width: 16px; flex-shrink: 0; }
 
-    .pair-gap { width: 12px; flex-shrink: 0; }
+        .block-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 6px;
+        }
 
-    .block-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 0 4px;
-    }
+        .block-label {
+            font-size: 15px;
+            font-weight: 800;
+            color: #475569;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
 
-    .block-label {
-        font-size: 14px;
-        font-weight: 900;
-        color: #1e3a8a;
-        margin-bottom: 8px;
-        letter-spacing: 0.5px;
-    }
+        .plots-stack { display: flex; flex-direction: column; gap: 3px; }
 
-    .plots-stack { display: flex; flex-direction: column; gap: 3px; }
+        .lot-box {
+            width: 46px;
+            height: 22px;
+            border-radius: 5px;
+            border: 2px solid;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: white;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+        .lot-box:hover {
+            transform: scale(1.2);
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .lot-box.vacant { background: #10b981; border-color: #059669; }
+        .lot-box.occupied { background: #ef4444; border-color: #dc2626; }
 
-    .lot-box {
-        width: 50px;
-        height: 20px;
-        border-radius: 4px;
-        border: 2px solid;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        font-weight: 700;
-        transition: transform 0.1s, box-shadow 0.1s;
-        position: relative;
-    }
+        .lot-box.highlighted {
+            box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.6);
+            transform: scale(1.25) !important;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+            border-color: #d97706 !important;
+            animation: pulse 1.5s infinite !important;
+        }
 
-    .lot-box:hover {
-        transform: scale(1.25);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 100;
-    }
+        .lot-box.blurred {
+            filter: blur(1.5px) opacity(0.4);
+            transform: scale(0.9) !important;
+        }
 
-    .lot-box.vacant    { background: #10b981; border-color: #059669; color: white; }
-    .lot-box.occupied  { background: #ef4444; border-color: #dc2626; color: white; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.6); }
+            50% { box-shadow: 0 0 0 6px #fbbf24, 0 0 30px rgba(251,191,36,0.8); }
+        }
 
-    /* Simplified highlight */
-    .lot-box.highlighted {
-        box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.8) !important;
-        transform: scale(1.3) !important;
-        z-index: 1000 !important;
-        background: linear-gradient(45deg, #fbbf24, #f59e0b) !important;
-        border-color: #d97706 !important;
-        animation: pulse 1.5s infinite !important;
-    }
+        .phase-labels-row {
+            display: flex;
+            width: 100%;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 2px solid #cbd5e1;
+            font-size: 13px;
+            font-weight: 800;
+            color: #475569;
+            letter-spacing: 1px;
+        }
+        .phase-label-cell { text-align: center; text-transform: uppercase; flex: 1; }
 
-    @keyframes pulse {
-        0%, 100% { box-shadow: 0 0 0 4px #fbbf24, 0 0 20px rgba(251,191,36,0.8); }
-        50% { box-shadow: 0 0 0 6px #fbbf24, 0 0 30px rgba(251,191,36,1); }
-    }
+        /* ── Simple Footer ── */
+        .simple-footer {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 1rem 0;
+            text-align: center;
+            font-size: 12px;
+        }
 
-    .phase-labels-row {
-        display: flex;
-        width: 100%;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 3px solid #1e3a8a;
-        font-size: 14px;
-        font-weight: 900;
-        color: #1e3a8a;
-        letter-spacing: 1px;
-    }
+        .footer-brand {
+            font-weight: 700;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
 
-    .phase-label-cell { text-align: center; text-transform: uppercase; }
+        /* Modal */
+        .deceased-card.focused {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.22), 0 10px 24px rgba(15, 23, 42, 0.12);
+            animation: focusPulse 1.2s ease-out 1;
+        }
+        @keyframes focusPulse {
+            0%   { transform: translateY(0); }
+            40%  { transform: translateY(-2px); }
+            100% { transform: translateY(0); }
+        }
 
-    /* Public plot modal - simplified, read-only */
-    #publicPlotModal .modal-header {
-        background: linear-gradient(135deg, #059669, #10b981);
-        color: white;
-        border-radius: 0.375rem 0.375rem 0 0;
-    }
+        /* Responsive */
+        @media (max-width: 992px) {
+            .cemetery-sidebar { width: 240px; }
+        }
+        @media (max-width: 768px) {
+            .cemetery-layout { flex-direction: column; }
+            .cemetery-sidebar { width: 100%; height: auto; }
+            .sidebar-section { padding: 16px; }
+            .filter-bar .row { flex-direction: column; gap: 10px; }
+            .filter-bar .aa-filter { width: 100%; }
+            .simple-header { padding: 12px 0; }
+            .header-title { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
 
-    #publicPlotModal .modal-header .btn-close {
-        filter: invert(1) grayscale(100%) brightness(200%);
-    }
-
-    .public-plot-meta-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 12px;
-    }
-
-    @media (max-width: 576px) {
-        .public-plot-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-
-    .public-plot-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 10px 10px;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-        min-width: 0;
-    }
-
-    .public-plot-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        margin-bottom: 3px;
-        display: block;
-    }
-
-    .public-plot-value {
-        font-size: 13px;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.25;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .public-deceased-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    @media (max-width: 768px) {
-        .public-deceased-grid { grid-template-columns: 1fr; }
-    }
-
-    .public-deceased-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-    }
-
-    .public-deceased-name {
-        font-weight: 900;
-        color: #0f172a;
-        font-size: 13px;
-        line-height: 1.2;
-        margin: 0 0 6px;
-    }
-
-    .public-deceased-meta {
-        font-size: 12px;
-        color: #475569;
-        margin: 0;
-        line-height: 1.35;
-    }
-</style>
-
-<div class="cemetery-layout">
-    <!-- Sidebar -->
-    <div class="cemetery-sidebar">
-        <div class="sidebar-section">
-            <div class="public-view-badge">
-                <i class="fas fa-globe"></i> Public View
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <h6><i class="fas fa-search"></i> Search Deceased</h6>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Type name to search..." autocomplete="off">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <h6><i class="fas fa-map"></i> Legend</h6>
-            <div>
-                <div class="legend-item">
-                    <div class="legend-box vacant"></div>
-                    <span>Vacant Plot</span>
+    <!-- Simple Header -->
+    <header class="simple-header">
+        <div class="container">
+            <div class="header-brand">
+                <div class="header-brand-icon">
+                    <i class="fas fa-map-location-dot"></i>
                 </div>
+                <div>
+                    <h1 class="header-title">Municipality of Tuy, Magahis Cemetery Map</h1>
+                    <p class="header-subtitle">Public Burial Records</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <div class="container">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-5 col-md-6">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search by name..." autocomplete="off">
+                        <i class="fas fa-search search-icon"></i>
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 aa-filter">
+                    <select id="aaStaffSectionSelect" class="form-select">
+                        <option value="1">AA Block — Section 1</option>
+                        <option value="2">AA Block — Section 2</option>
+                        <option value="3">AA Block — Section 3</option>
+                    </select>
+                </div>
+                <div class="col-lg-4 col-md-2 d-none d-md-block">
+                    <div class="text-secondary small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Click any plot to view details
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cemetery-layout">
+        <!-- Sidebar -->
+        <aside class="cemetery-sidebar">
+            <div class="sidebar-section">
+                <h6><i class="fas fa-chart-bar me-2"></i>Statistics</h6>
+                <div class="stat-item">
+                    <span class="stat-label">Total Plots</span>
+                    <span class="stat-value" id="totalPlots">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Occupied</span>
+                    <span class="stat-value" id="occupiedPlots" style="color: #ef4444;">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Vacant</span>
+                    <span class="stat-value" id="vacantPlots" style="color: #10b981;">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Buried</span>
+                    <span class="stat-value" id="totalDeceased" style="color: #3b82f6;">-</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h6><i class="fas fa-map-legend me-2"></i>Map Legend</h6>
                 <div class="legend-item">
                     <div class="legend-box occupied"></div>
                     <span>Occupied Plot</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-box vacant"></div>
+                    <span>Vacant Plot</span>
+                </div>
             </div>
-        </div>
 
-        <div class="sidebar-section">
-            <h6><i class="fas fa-layer-group"></i> AA Block Section (Phase 3)</h6>
-            <select id="aaSectionSelect" class="filter-input" onchange="changeAASectionPublic(this.value)">
-                <option value="1">Section 1 (Default)</option>
-                <option value="2">Section 2</option>
-                <option value="3">Section 3</option>
-            </select>
-        </div>
-        <div class="sidebar-section">
-            <h6><i class="fas fa-chart-bar"></i> Statistics</h6>
-            <div class="stat-item">
-                <span class="stat-label">Total Plots</span>
-                <span class="stat-value" id="totalPlots">0</span>
+            <div class="sidebar-section">
+                <h6><i class="fas fa-layer-group me-2"></i>AA Block Section</h6>
+                <div class="text-muted small mb-2">
+                    Select section to filter AA block
+                </div>
+                <select id="aaStaffSectionSelect" class="form-select">
+                    <option value="1">Section 1 (Default)</option>
+                    <option value="2">Section 2</option>
+                    <option value="3">Section 3</option>
+                </select>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Vacant</span>
-                <span class="stat-value" id="vacantPlots" style="color:#10b981;">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Occupied</span>
-                <span class="stat-value" id="occupiedPlots" style="color:#ef4444;">0</span>
-            </div>
-        </div>
+        </aside>
 
-        <div class="sidebar-section">
-            <a href="cemetery_map.php" class="btn btn-primary w-100" style="font-weight:700;">
-                <i class="fas fa-user-lock me-2"></i>Staff Dashboard
-            </a>
-        </div>
+        <!-- Map -->
+        <main class="map-container" id="mapContainer">
+            <div class="map-scaler" id="mapScaler">
+                <div class="map-inner" id="mapInner">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading cemetery map...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Map -->
-    <div class="map-container" id="mapContainer">
-        <div class="map-scaler" id="mapScaler">
-            <div class="map-inner" id="mapInner">
-                <div class="text-center py-5">
-                    <div class="spinner-border" role="status"></div>
-                    <p class="mt-2">Loading cemetery map...</p>
+    <!-- Simple Footer -->
+    <footer class="simple-footer">
+        <div class="container">
+            <div class="footer-brand">Municipality of Tuy, Magahis Cemetery</div>
+            <p class="mb-0">&copy; 2026 Municipality of Tuy. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Plot Details Modal -->
+    <div class="modal fade" id="plotModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Plot Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="plotModalContent">Loading...</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Public Plot Details Modal (read-only, simplified) -->
-<div class="modal fade" id="publicPlotModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="publicModalTitle">Plot Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="publicPlotModalContent">Loading...</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<?php include 'includes/footer.php'; ?>
+    <script>
+        let allPlots = [];
+        let allDeceasedRecords = [];
+        let searchTimeout = null;
+        let currentAASection = '1';
 
-<script>
-let allPublicPlots = [];
-let currentAASectionPublic = '1';
-
-function changeAASectionPublic(section) {
-    currentAASectionPublic = section;
-    document.getElementById('aaSectionSelect').value = section;
-    renderPublicCemeteryMap();
-    scaleMap();
-}
-
-async function loadPublicCemeteryMap() {
-    try {
-        // Load ALL plots (no phase filter) from public API
-        const response = await fetch('/api/get_cemetery_map.php');
-        const data = await response.json();
-
-        if (data.success) {
-            allPublicPlots = data.plots;
-            renderPublicCemeteryMap();
-            updatePublicStatistics();
+        function changeAASection(section) {
+            currentAASection = section;
+            document.getElementById('aaStaffSectionSelect').value = section;
+            renderCemeteryMap();
+            scaleMap();
         }
-    } catch (error) {
-        console.error('Error loading public cemetery map:', error);
-        document.getElementById('mapInner').innerHTML =
-            '<p class="text-center text-danger">Error loading map</p>';
-    }
-}
 
-function renderPublicCemeteryMap() {
-    // Same phases structure as staff map
-    const phases = { 'Phase 1': {}, 'Phase 2': {}, 'Phase 3': {} };
-
-    allPublicPlots.forEach(plot => {
-        const phase = plot.phase || 'Phase 1';
-        const block = plot.block;
-
-        if (!phases[phase]) phases[phase] = {};
-        if (!phases[phase][block]) phases[phase][block] = [];
-        phases[phase][block].push(plot);
-    });
-
-    // Populate missing blocks for Phase 1/2
-    const allKnownBlocks = ['A','B','C','D','E','F','G','H','I','T','U','V','W','X','Y','Z'];
-    ['Phase 1', 'Phase 2'].forEach(phase => {
-        allKnownBlocks.forEach(block => {
-            if (!phases[phase][block]) phases[phase][block] = [];
-        });
-    });
-
-    function findPublicPlot(block, lot, phase, section = null) {
-        const plots = phases[phase]?.[block] || [];
-        return plots.find(p => parseInt(p.lot) === lot && (!section || p.section === section)) || null;
-    }
-
-    let html = '<div class="all-blocks" id="allBlocks">';
-
-    // Render AA Block Phase 3 (section 1 always, others optional)
-    for (let sec = 1; sec <= 3; sec++) {
-        if (sec === 1 || currentAASectionPublic === sec.toString()) {
-            html += `<div class="block-col" data-section="${sec}">`;
-            html += `<div class="block-label">AA Sec ${sec}</div>`;
-            html += '<div class="plots-stack">';
-            for (let lot = 20; lot >= 1; lot--) {
-                const plot = findPublicPlot('AA', lot, 'Phase 3', sec);
-                const colorClass = plot ? (plot.status === 'Vacant' ? 'vacant' : 'occupied') : 'vacant';
-                const tooltip = `Block AA Sec ${sec} Lot ${lot} (${plot ? plot.status : 'Vacant'})`;
-                const displayClass = (currentAASectionPublic !== sec.toString()) ? 'blurred' : '';
-                html += `
-                    <div class="lot-box ${colorClass} ${displayClass}"
-                         title="${tooltip}"
-                         data-block="AA" data-section="${sec}" data-lot="${lot}"
-                         onclick="viewPublicPlotDetails('${plot ? plot.plot_id : ''}', 'AA', ${lot}, 'Phase 3', ${sec})">
-                        ${lot}
-                    </div>`;
+        async function loadCemeteryMap() {
+            try {
+                const response = await fetch('/api/get_public_cemetery_map.php');
+                const data = await response.json();
+                if (data.success) {
+                    allPlots = data.plots || [];
+                    await loadAllDeceasedRecords();
+                    renderCemeteryMap();
+                    updateStatistics();
+                }
+            } catch (error) {
+                console.error('Error loading map:', error);
+                document.getElementById('mapInner').innerHTML =
+                    '<p class="text-center text-danger p-4">Error loading map. Please refresh.</p>';
             }
-            html += '</div></div>';
         }
-    }
 
-    html += '<div class="phase-divider"></div>';
+        async function loadAllDeceasedRecords() {
+            try {
+                allDeceasedRecords = [];
+                let totalCount = 0;
+                for (const plot of allPlots) {
+                    if (plot.status === 'Occupied' && plot.deceased_count > 0) {
+                        const response = await fetch(`/api/get_public_lot_details.php?plot_id=${plot.plot_id}`);
+                        const data = await response.json();
+                        if (data.success && data.deceased_records) {
+                            data.deceased_records.forEach(record => {
+                                allDeceasedRecords.push({
+                                    ...record,
+                                    plot_id: plot.plot_id,
+                                    block: plot.block,
+                                    section: plot.section,
+                                    lot: plot.lot,
+                                    phase: plot.phase,
+                                });
+                                totalCount++;
+                            });
+                        }
+                    }
+                }
+                document.getElementById('totalDeceased').textContent = totalCount;
+            } catch (error) {
+                console.error('Error loading deceased records:', error);
+            }
+        }
 
-    // Phase 2
-    const phase2Groups = [['Z','Y'], ['X','W'], ['V','U'], ['T']];
-    phase2Groups.forEach((group, gi) => {
-        if (gi > 0) html += '<div class="pair-gap"></div>';
-        group.forEach(b => html += renderPublicBlockColumn(b, 'Phase 2', findPublicPlot));
-    });
+        function updateStatistics() {
+            const vacant = allPlots.filter(p => p.status === 'Vacant').length;
+            const occupied = allPlots.filter(p => p.status === 'Occupied').length;
+            document.getElementById('totalPlots').textContent = allPlots.length;
+            document.getElementById('vacantPlots').textContent = vacant;
+            document.getElementById('occupiedPlots').textContent = occupied;
+        }
 
-    html += '<div class="phase-divider"></div>';
+        function renderCemeteryMap() {
+            const phases = { 'Phase 1': {}, 'Phase 2': {}, 'Phase 3': {} };
+            allPlots.forEach(plot => {
+                const phase = plot.phase || 'Phase 1';
+                const block = plot.block;
+                if (!phases[phase]) phases[phase] = {};
+                if (!phases[phase][block]) phases[phase][block] = [];
+                phases[phase][block].push(plot);
+            });
 
-    // Phase 1
-    const phase1Groups = [['I','H'], ['G','F'], ['E','D'], ['C','B'], ['A']];
-    phase1Groups.forEach((group, gi) => {
-        if (gi > 0) html += '<div class="pair-gap"></div>';
-        group.forEach(b => html += renderPublicBlockColumn(b, 'Phase 1', findPublicPlot));
-    });
+            function findPlot(block, lot, phase) {
+                const plots = phases[phase] ? phases[phase][block] : null;
+                if (!plots) return null;
+                return plots.find(p => parseInt(p.lot) === lot) || null;
+            }
 
-    html += '</div>';
-    html += `
-        <div class="phase-labels-row">
-            <div class="phase-label-cell" style="flex:1;">PHASE 3</div>
-            <div style="width:20px;"></div>
-            <div class="phase-label-cell" style="flex:3;">PHASE 2</div>
-            <div style="width:20px;"></div>
-            <div class="phase-label-cell" style="flex:3;">PHASE 1</div>
-        </div>
-    `;
+            let html = '<div class="all-blocks" id="allBlocks">';
+            const aaSecPlots = allPlots.filter(p => p.block === 'AA' && p.section === currentAASection);
+            if (aaSecPlots.length > 0 || currentAASection === '1') {
+                html += renderBlockColumn('AA', 'Phase 3', (block, lot, phase) => {
+                    return allPlots.find(p => p.block === block && parseInt(p.lot) === lot && p.section === currentAASection) || null;
+                }, 20);
+            }
+            html += renderBlockColumn('', 'Phase 3', findPlot, 10);
+            html += '<div class="phase-divider"></div>';
 
-    document.getElementById('mapInner').innerHTML = html;
-    setTimeout(() => scaleMap(), 100);
-}
+            const phase2Groups = [['Z','Y'], ['X','W'], ['V','U'], ['T']];
+            phase2Groups.forEach((group, gi) => {
+                if (gi > 0) html += '<div class="pair-gap"></div>';
+                group.forEach(b => { html += renderBlockColumn(b, 'Phase 2', findPlot, 20); });
+            });
+            html += '<div class="phase-divider"></div>';
 
-function renderPublicBlockColumn(blockName, phaseName, findPlot) {
-    let html = '<div class="block-col">';
-    html += `<div class="block-label">${blockName || 'Unnamed'}</div>`;
-    html += '<div class="plots-stack">';
+            const phase1Groups = [['I','H'], ['G','F'], ['E','D'], ['C','B'], ['A']];
+            phase1Groups.forEach((group, gi) => {
+                if (gi > 0) html += '<div class="pair-gap"></div>';
+                group.forEach(b => { html += renderBlockColumn(b, 'Phase 1', findPlot, 20); });
+            });
+            html += '</div>';
 
-    for (let lot = 20; lot >= 1; lot--) {
-        const plot = findPlot(blockName, lot, phaseName);
-        const colorClass = plot ? (plot.status === 'Vacant' ? 'vacant' : 'occupied') : 'vacant';
-        const tooltip = `Block ${blockName || 'Unnamed'} Lot ${lot} (${plot ? plot.status : 'Vacant'})`;
-        html += `
-            <div class="lot-box ${colorClass}"
-                 title="${tooltip}"
-                 data-block="${blockName || 'Unnamed'}" data-lot="${lot}"
-                 onclick="viewPublicPlotDetails('${plot ? plot.plot_id : ''}', '${blockName}', ${lot}, '${phaseName}')">
-                ${lot}
-            </div>`;
-    }
+            html += `
+                <div class="phase-labels-row">
+                    <div class="phase-label-cell">PHASE 3</div>
+                    <div style="width:20px;"></div>
+                    <div class="phase-label-cell">PHASE 2</div>
+                    <div style="width:20px;"></div>
+                    <div class="phase-label-cell">PHASE 1</div>
+                </div>
+            `;
+            document.getElementById('mapInner').innerHTML = html;
+            setTimeout(scaleMap, 100);
+        }
 
-    html += '</div></div>';
-    return html;
-}
-
-function updatePublicStatistics() {
-    const vacant = allPublicPlots.filter(p => p.status === 'Vacant').length;
-    const occupied = allPublicPlots.filter(p => p.status === 'Occupied').length;
-
-    document.getElementById('totalPlots').textContent = allPublicPlots.length;
-    document.getElementById('vacantPlots').textContent = vacant;
-    document.getElementById('occupiedPlots').textContent = occupied;
-}
-
-async function viewPublicPlotDetails(plotId, block, lot, phase, section = '') {
-    if (!plotId) {
-        document.getElementById('publicModalTitle').textContent = `Block ${block || 'Unnamed'}${section ? ` Sec ${section}` : ''} Lot ${lot} (${phase})`;
-        document.getElementById('publicPlotModalContent').innerHTML = `
-            <div class="alert alert-info">
-                <h6><i class="fas fa-info-circle"></i> Vacant Plot</h6>
-                <p>This plot is currently available.</p>
-                <p class="mb-0"><em>${phase} | Block ${block || 'Unnamed'}${section ? ` Sec ${section}` : ''} | Lot ${lot}</em></p>
-            </div>`;
-    } else {
-        try {
-            const response = await fetch(`/api/get_public_lot_details.php?plot_id=${plotId}`);
-            const data = await response.json();
-
-            if (data.success) {
-                const plot = data.plot;
-                const deceased = data.deceased || [];
-
-                document.getElementById('publicModalTitle').textContent = 
-                    `Block ${plot.block}${plot.section ? ` Sec ${plot.section}` : ''} Lot ${plot.lot} (${plot.phase || phase})`;
-
-                let content = `
-                    <div class="public-plot-meta-grid">
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Block</span>
-                            <div class="public-plot-value">${plot.block}</div>
-                        </div>
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Section</span>
-                            <div class="public-plot-value">${plot.section || 'N/A'}</div>
-                        </div>
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Lot</span>
-                            <div class="public-plot-value">${plot.lot}</div>
-                        </div>
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Phase</span>
-                            <div class="public-plot-value">${plot.phase || phase}</div>
-                        </div>
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Type</span>
-                            <div class="public-plot-value">${plot.type || 'N/A'}</div>
-                        </div>
-                        <div class="public-plot-card">
-                            <span class="public-plot-label">Status</span>
-                            <div class="public-plot-value">${plot.status}</div>
-                        </div>
+        function renderBlockColumn(blockName, phaseName, findPlot, lotsCount = 20) {
+            let html = '<div class="block-col">';
+            html += `<div class="block-label">${blockName || '&nbsp;'}</div>`;
+            html += '<div class="plots-stack">';
+            for (let lot = lotsCount; lot >= 1; lot--) {
+                const plot = findPlot(blockName, lot, phaseName);
+                const colorClass = plot ? (plot.status === 'Vacant' ? 'vacant' : 'occupied') : 'vacant';
+                const displayBlock = blockName || 'Unnamed';
+                const plotSection = plot ? plot.section : '';
+                const deceasedNames = plot && plot.deceased_names ? String(plot.deceased_names) : '';
+                const tooltipLine1 = `Block ${displayBlock}${plotSection ? ', Section ' + plotSection : ''}, Lot ${lot} (${phaseName})`;
+                const tooltipLine2 = plot
+                    ? (deceasedNames ? 'Buried: ' + deceasedNames : (plot.status === 'Vacant' ? 'Vacant' : 'Occupied'))
+                    : 'Vacant';
+                const tooltip = `${tooltipLine1} — ${tooltipLine2}`;
+                html += `
+                    <div class="lot-box ${colorClass}"
+                         title="${tooltip}"
+                         data-block="${displayBlock}"
+                         data-section="${plotSection}"
+                         data-lot="${lot}"
+                         data-plotid="${plot ? plot.plot_id : ''}"
+                         onclick="viewPlotDetails(${plot ? plot.plot_id : 'null'}, '${blockName}', ${lot}, '${phaseName}')">
+                        ${lot}
                     </div>
                 `;
+            }
+            html += '</div></div>';
+            return html;
+        }
 
+        function scaleMap() {
+            const container = document.getElementById('mapContainer');
+            const scaler = document.getElementById('mapScaler');
+            if (!container || !scaler) return;
+            const scale = Math.min(container.clientWidth / 900, 1.2);
+            scaler.style.transform = `scale(${scale})`;
+        }
+
+        async function viewPlotDetails(plotId, blockName, lotNumber, phaseName) {
+            if (!plotId || plotId === 'null') {
+                const displayBlock = blockName || 'Unnamed';
+                document.getElementById('modalTitle').textContent = `Plot: Block ${displayBlock}, Lot ${lotNumber} (${phaseName})`;
+                document.getElementById('plotModalContent').innerHTML = `
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Vacant Plot</h6>
+                        <p class="mb-0">This plot is currently vacant and available for burial.</p>
+                        <p class="mb-0"><small>Phase: ${phaseName} | Block: ${displayBlock} | Lot: ${lotNumber}</small></p>
+                    </div>
+                `;
+                new bootstrap.Modal(document.getElementById('plotModal')).show();
+                return;
+            }
+            try {
+                const response = await fetch(`/api/get_public_lot_details.php?plot_id=${plotId}`);
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load plot details');
+                const plot = data.plot;
+                const deceased = data.deceased_records || [];
+                document.getElementById('modalTitle').textContent = `Plot: Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot}`;
+                let html = `
+                    <div class="plot-mini-card">
+                        <span class="plot-mini-label">Phase</span>
+                        <div class="plot-mini-value">${plot.phase || phaseName}</div>
+                    </div>
+                    <div class="plot-mini-card">
+                        <span class="plot-mini-label">Type</span>
+                        <div class="plot-mini-value">${plot.type || 'N/A'}</div>
+                    </div>
+                    <div class="plot-mini-card">
+                        <span class="plot-mini-label">Status</span>
+                        <div class="plot-mini-value">${plot.status || 'N/A'}</div>
+                    </div>
+                `;
                 if (deceased.length > 0) {
-                    content += `
-                        <h6 class="mt-3 mb-2" style="font-weight:700;color:#1e3a8a;">
-                            <i class="fas fa-users me-2"></i>Buried Here
-                        </h6>
-                        <div class="public-deceased-grid">
-                    `;
-                    deceased.forEach(person => {
-                        content += `
-                            <div class="public-deceased-card">
-                                <div class="public-deceased-name">${person.full_name}</div>
-                                <div class="public-deceased-meta">
-                                    Born: ${formatPublicDate(person.birth_date)}<br>
-                                    Died: ${formatPublicDate(person.date_of_death)}<br>
-                                    Buried: ${formatPublicDate(person.date_of_burial)}
-                                </div>
+                    html += '<div class="plot-section-title"><h6><i class="fas fa-user me-2"></i>Deceased Records</h6></div>';
+                    html += '<div class="deceased-cards">';
+                    deceased.forEach(record => {
+                        html += `
+                            <div class="deceased-card">
+                                <div class="deceased-name">${record.full_name || 'Unnamed'}</div>
+                                <p class="deceased-meta">
+                                    <strong>Date of Birth:</strong> ${formatDate(record.birth_date)}<br>
+                                    <strong>Date of Death:</strong> ${formatDate(record.date_of_death)}
+                                </p>
                             </div>
                         `;
                     });
-                    content += `</div>`;
+                    html += '</div>';
+                } else {
+                    html += '<p class="text-muted text-center">No burial records for this plot</p>';
                 }
-
-                document.getElementById('publicPlotModalContent').innerHTML = content;
+                document.getElementById('plotModalContent').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('plotModal')).show();
+            } catch (error) {
+                console.error('Error fetching plot details:', error);
+                document.getElementById('plotModalContent').innerHTML = '<div class="alert alert-danger">Error loading plot details.</div>';
+                new bootstrap.Modal(document.getElementById('plotModal')).show();
             }
-        } catch (error) {
-            console.error('Public plot details error:', error);
-            document.getElementById('publicPlotModalContent').innerHTML = 
-                '<div class="alert alert-warning">Unable to load plot details</div>';
         }
-    }
 
-    new bootstrap.Modal(document.getElementById('publicPlotModal')).show();
-}
-
-function formatPublicDate(dateStr) {
-    if (!dateStr) return 'N/A';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-    });
-}
-
-// Search functionality (client-side)
-document.getElementById('searchInput').addEventListener('input', function() {
-    const term = this.value.toLowerCase().trim();
-    if (term.length < 2) {
-        renderPublicCemeteryMap();
-        return;
-    }
-
-    const matches = allPublicPlots.filter(p => 
-        p.deceased_names?.toLowerCase().includes(term) ||
-        p.block.toLowerCase().includes(term) ||
-        p.lot.toString().includes(term)
-    );
-
-    highlightPublicSearchResults(matches);
-});
-
-function highlightPublicSearchResults(matches) {
-    // Simplified: just highlight matching plots on map
-    document.querySelectorAll('.lot-box').forEach(box => {
-        const block = box.dataset.block;
-        const section = box.dataset.section;
-        const lot = box.dataset.lot;
-        
-        const isMatch = matches.some(p => 
-            p.block === block && p.lot == lot && (!section || p.section === section)
-        );
-        
-        if (isMatch) {
-            box.classList.add('highlighted');
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         }
-    });
-}
 
-// Map scaling
-function scaleMap() {
-    const container = document.getElementById('mapContainer');
-    const scaler = document.getElementById('mapScaler');
-    const inner = document.getElementById('mapInner');
-    
-    if (!container || !scaler || !inner) return;
-    
-    scaler.style.transform = 'scale(1)';
-    const scale = Math.min(
-        (container.clientWidth - 40) / inner.scrollWidth,
-        (container.clientHeight - 40) / inner.scrollHeight,
-        1
-    );
-    scaler.style.transform = `scale(${scale})`;
-}
+        function performSearch() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsEl = document.getElementById('searchResults');
+            if (term.length < 2) {
+                resultsEl.classList.remove('active');
+                return;
+            }
+            const matches = allDeceasedRecords.filter(r => r.full_name.toLowerCase().includes(term)).slice(0, 15);
+            if (matches.length === 0) {
+                resultsEl.innerHTML = '<div class="no-results">No matching records found</div>';
+                resultsEl.classList.add('active');
+                return;
+            }
+            resultsEl.innerHTML = matches.map(r => `
+                <div class="search-result-item" onclick="focusOnDeceased(${r.deceased_id})">
+                    <div class="search-result-name">${escapeHtml(r.full_name)}</div>
+                    <div class="search-result-location"><i class="fas fa-map-marker-alt"></i> Block ${r.block || 'N/A'}, Section ${r.section || 'N/A'}, Lot ${r.lot || 'N/A'}</div>
+                    <div class="search-result-dates"><i class="fas fa-calendar"></i> Born: ${formatDate(r.birth_date)} | Died: ${formatDate(r.date_of_death)}</div>
+                </div>
+            `).join('');
+            resultsEl.classList.add('active');
+        }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    loadPublicCemeteryMap();
-    window.addEventListener('resize', scaleMap);
-});
-</script>
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function focusOnDeceased(deceasedId) {
+            document.getElementById('searchResults').classList.remove('active');
+            document.getElementById('searchInput').value = '';
+            const record = allDeceasedRecords.find(r => r.deceased_id === deceasedId);
+            if (!record) return;
+            const plot = allPlots.find(p => p.plot_id === record.plot_id);
+            if (!plot) return;
+            viewPlotDetails(plot.plot_id, plot.block, plot.lot, plot.phase);
+            const lotBox = document.querySelector(`.lot-box[data-plotid="${plot.plot_id}"]`);
+            if (lotBox) {
+                document.querySelectorAll('.lot-box').forEach(b => b.classList.remove('highlighted', 'blurred'));
+                lotBox.classList.add('highlighted');
+                setTimeout(() => lotBox.classList.remove('highlighted'), 3000);
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const searchBox = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            if (searchBox && searchResults && !searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(performSearch, 200);
+                });
+            }
+            const aaSelect = document.getElementById('aaStaffSectionSelect');
+            if (aaSelect) {
+                aaSelect.addEventListener('change', (e) => changeAASection(e.target.value));
+            }
+            window.addEventListener('resize', scaleMap);
+            loadCemeteryMap();
+        });
+    </script>
+</body>
+</html>
