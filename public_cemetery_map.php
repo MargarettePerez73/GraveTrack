@@ -409,7 +409,7 @@ function changeAASectionPublic(section) {
 async function loadPublicCemeteryMap() {
     try {
         // Load ALL plots (no phase filter) from public API
-        const response = await fetch('/api/get_public_cemetery_map.php');
+        const response = await fetch('/api/get_cemetery_map.php');
         const data = await response.json();
 
         if (data.success) {

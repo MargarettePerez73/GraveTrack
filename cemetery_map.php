@@ -945,10 +945,11 @@ function renderCemeteryMap() {
 
     let html = '<div class="all-blocks" id="allBlocks">';
 
-    for (let sec = 1; sec <= 3; sec++) {
-        if (sec == 1 || currentAAStaffSection === sec.toString()) {
-            html += renderBlockColumn('AA', 'Phase 3', findPlot, 20);
-        }
+    const aaSecPlots = allPlots.filter(p => p.block === 'AA' && p.section === currentAAStaffSection);
+    if (aaSecPlots.length > 0 || currentAAStaffSection === '1') {
+        html += renderBlockColumn('AA', 'Phase 3', (block, lot, phase) => {
+            return allPlots.find(p => p.block === block && parseInt(p.lot) === lot && p.section === currentAAStaffSection) || null;
+        }, 20);
     }
     html += renderBlockColumn('',   'Phase 3', findPlot, 10);
 
