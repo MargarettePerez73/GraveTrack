@@ -34,94 +34,164 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         #plotModal .modal-header {
             background: linear-gradient(135deg, #1e3a8a, #2563eb);
             color: white;
-            border-radius: 0.375rem 0.375rem 0 0;
+            border-radius: 12px 12px 0 0;
+            border-bottom: none;
+            padding: 1rem 1.25rem;
         }
         #plotModal .modal-header .btn-close {
             filter: invert(1) grayscale(100%) brightness(200%);
         }
         #plotModal .modal-title {
             font-weight: 800;
-            font-size: 15px;
-            letter-spacing: 0.2px;
+            font-size: 1.125rem;
+            letter-spacing: 0.01em;
         }
-        .plot-meta-grid {
+        #plotModal .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        #plotModal .modal-body {
+            padding: 1.25rem;
+        }
+
+        /* Unified Card Grid */
+        .info-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
         }
-        @media (max-width: 576px) {
-            .plot-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        .plot-mini-card {
-            background: #ffffff;
+        .info-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 10px 10px;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-            min-width: 0;
+            padding: 0.875rem 1rem;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+            transition: all 0.2s ease;
         }
-        .plot-mini-label {
-            font-size: 11px;
-            font-weight: 700;
+        .info-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+            transform: translateY(-1px);
+        }
+        .info-label {
+            font-size: 0.6875rem;
+            font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
-            margin-bottom: 3px;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.25rem;
             display: block;
+            line-height: 1.2;
         }
-        .plot-mini-value {
-            font-size: 13px;
-            font-weight: 800;
+        .info-value {
+            font-size: 0.9375rem;
+            font-weight: 700;
             color: #0f172a;
-            line-height: 1.25;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.3;
+            word-break: break-word;
         }
-        .plot-section-title {
+
+        /* Deceased Section */
+        .deceased-section-title {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            margin: 12px 0 8px;
+            gap: 0.5rem;
+            margin: 1.25rem 0 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
         }
-        .plot-section-title h6 {
+        .deceased-section-title h6 {
             margin: 0;
             font-weight: 800;
             color: #1e3a8a;
-            font-size: 13px;
-            letter-spacing: 0.2px;
+            font-size: 0.875rem;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .deceased-cards {
+        .deceased-count-badge {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .deceased-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.75rem;
         }
-        @media (max-width: 768px) {
-            .deceased-cards { grid-template-columns: 1fr; }
+        @media (max-width: 576px) {
+            .deceased-grid { grid-template-columns: 1fr; }
         }
         .deceased-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .deceased-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #1e3a8a, #2563eb);
+        }
+        .deceased-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+            transform: translateY(-2px);
         }
         .deceased-name {
-            font-weight: 900;
+            font-weight: 800;
             color: #0f172a;
-            font-size: 13px;
-            line-height: 1.2;
-            margin: 0 0 6px;
+            font-size: 0.9375rem;
+            line-height: 1.3;
+            margin: 0 0 0.625rem;
         }
         .deceased-meta {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: #475569;
             margin: 0;
-            line-height: 1.35;
+            line-height: 1.5;
         }
-        .deceased-meta small { color: #64748b; }
+        .deceased-meta strong {
+            font-weight: 700;
+            color: #334155;
+        }
+        .deceased-meta small {
+            display: block;
+            color: #64748b;
+            font-size: 0.6875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.4;
+        }
+        .empty-state p {
+            margin: 0;
+            font-size: 0.875rem;
+        }
 
          /* ── Simple Header ── */
          .simple-header {
@@ -791,11 +861,31 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
                 const displayBlock = blockName || 'Unnamed';
                 document.getElementById('modalTitle').textContent = `Plot: Block ${displayBlock}, Lot ${lotNumber} (${phaseName})`;
                 document.getElementById('plotModalContent').innerHTML = `
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle"></i> Vacant Plot</h6>
-                        <p class="mb-0">This plot is currently vacant and available for burial.</p>
-                        <p class="mb-0"><small>Phase: ${phaseName} | Block: ${displayBlock} | Lot: ${lotNumber}</small></p>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <span class="info-label">Phase</span>
+                            <div class="info-value">${phaseName}</div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Block</span>
+                            <div class="info-value">${displayBlock}</div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Lot</span>
+                            <div class="info-value">${lotNumber}</div>
+                        </div>
                     </div>
+                    <div class="info-card" style="background: linear-gradient(145deg, #f0fdf4, #dcfce7); border-color: #86efac;">
+                        <span class="info-label" style="color: #166534;">Status</span>
+                        <div class="info-value" style="color: #15803d; font-weight: 800;">
+                            <i class="fas fa-check-circle" style="margin-right: 0.375rem;"></i>
+                            Vacant Plot
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0" style="margin-top: 0.75rem; font-size: 0.8125rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This plot is currently vacant and available for burial.
+                    </p>
                 `;
                 new bootstrap.Modal(document.getElementById('plotModal')).show();
                 return;
@@ -808,29 +898,36 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
                 const deceased = data.deceased_records || [];
                 document.getElementById('modalTitle').textContent = `Plot: Block ${plot.block}, Section ${plot.section}, Lot ${plot.lot}`;
                 let html = `
-                    <div class="plot-mini-card">
-                        <span class="plot-mini-label">Phase</span>
-                        <div class="plot-mini-value">${plot.phase || phaseName}</div>
-                    </div>
-                    <div class="plot-mini-card">
-                        <span class="plot-mini-label">Type</span>
-                        <div class="plot-mini-value">${plot.type || 'N/A'}</div>
-                    </div>
-                    <div class="plot-mini-card">
-                        <span class="plot-mini-label">Status</span>
-                        <div class="plot-mini-value">${plot.status || 'N/A'}</div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <span class="info-label">Phase</span>
+                            <div class="info-value">${plot.phase || phaseName}</div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Type</span>
+                            <div class="info-value">${plot.type || 'N/A'}</div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Status</span>
+                            <div class="info-value">${plot.status || 'N/A'}</div>
+                        </div>
                     </div>
                 `;
                 if (deceased.length > 0) {
-                    html += '<div class="plot-section-title"><h6><i class="fas fa-user me-2"></i>Deceased Records</h6></div>';
-                    html += '<div class="deceased-cards">';
+                    html += `
+                        <div class="deceased-section-title">
+                            <h6><i class="fas fa-user"></i> Deceased Records</h6>
+                            <span class="deceased-count-badge">${deceased.length}</span>
+                        </div>
+                        <div class="deceased-grid">
+                    `;
                     deceased.forEach(record => {
                         html += `
                             <div class="deceased-card">
                                 <div class="deceased-name">${record.full_name || 'Unnamed'}</div>
                                 <p class="deceased-meta">
-                                    <strong>Date of Birth:</strong> ${formatDate(record.birth_date)}<br>
-                                    <strong>Date of Death:</strong> ${formatDate(record.date_of_death)}
+                                    <strong>Born:</strong> ${formatDate(record.birth_date)}<br>
+                                    <strong>Died:</strong> ${formatDate(record.date_of_death)}
                                 </p>
                             </div>
                         `;

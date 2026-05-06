@@ -393,18 +393,18 @@ include 'includes/header.php';
         try { if (instance) instance.destroy(); } catch (e) {}
     }
 
-    function renderPlotStatusChart(vacant, occupied, reserved) {
+    function renderPlotStatusChart(vacant, occupied) {
         const ctx = document.getElementById('plotStatusChart');
         if (!ctx) return;
         destroyChart(plotStatusChartInstance);
         plotStatusChartInstance = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Vacant', 'Occupied', 'Reserved'],
+                labels: ['Vacant', 'Occupied'],
                 datasets: [{
-                    data: [vacant, occupied, reserved],
-                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                    borderColor: ['#059669', '#dc2626', '#d97706'],
+                    data: [vacant, occupied],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderColor: ['#059669', '#dc2626'],
                     borderWidth: 2,
                 }]
             },
@@ -505,8 +505,7 @@ include 'includes/header.php';
 
                 renderPlotStatusChart(
                     parseInt(data.stats.total_vacant || 0, 10),
-                    parseInt(data.stats.total_occupied || 0, 10),
-                    parseInt(data.stats.total_reserved || 0, 10)
+                    parseInt(data.stats.total_occupied || 0, 10)
                 );
                 renderBlockDistributionChart(plotsByBlock);
             }
