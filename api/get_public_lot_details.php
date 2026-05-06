@@ -13,7 +13,14 @@ try {
     $db = $database->connect();
 
     // Get plot information
-    $plotQuery = "SELECT * FROM plots WHERE plot_id = :plot_id";
+    $plotQuery = "SELECT *, 
+        CASE
+            WHEN block = 'AA' THEN 'Phase 3'
+            WHEN block REGEXP '^[A-I]$' THEN 'Phase 1'
+            WHEN block REGEXP '^[T-Z]$' THEN 'Phase 2'
+            ELSE 'Unassigned'
+        END as phase
+        FROM plots WHERE plot_id = :plot_id";
     $plotStmt = $db->prepare($plotQuery);
     $plotStmt->bindParam(':plot_id', $plot_id);
     $plotStmt->execute();
