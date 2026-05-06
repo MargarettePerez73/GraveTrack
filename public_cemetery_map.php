@@ -131,19 +131,34 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
             box-shadow: 0 2px 8px rgba(30,58,138,0.2);
         }
         .header-brand {
-            display: flex;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 12px;
         }
-        .header-brand-icon {
-            width: 42px;
-            height: 42px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 10px;
+        .header-logo-wrap {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.35);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+        }
+        .header-logo-wrap img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+        .header-center {
+            text-align: center;
+        }
+        .header-spacer {
+            width: 56px;
+            height: 56px;
         }
         .header-title {
             font-size: 17px;
@@ -191,17 +206,45 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
             color: #94a3b8;
         }
         .filter-bar .aa-filter {
-            min-width: 160px;
+            min-width: 220px;
+        }
+        .filter-bar .section-select-wrap {
+            position: relative;
+        }
+        .filter-bar .section-select-wrap::before {
+            content: "\f3c5";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2563eb;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .filter-bar .section-select-wrap::after {
+            content: "\f107";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 12px;
+            pointer-events: none;
         }
         .filter-bar .form-select {
             border-radius: 10px;
             border: 2px solid #e2e8f0;
-            padding: 10px 14px;
+            padding: 10px 34px 10px 34px;
             font-size: 14px;
             cursor: pointer;
-            background-color: white;
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
             font-weight: 600;
             color: #334155;
+            appearance: none;
         }
         .filter-bar .form-select:focus {
             outline: none;
@@ -246,33 +289,10 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
 
         /* ── Map Layout ── */
         .cemetery-layout {
-            display: flex;
+            display: block;
             min-height: calc(100vh - 124px);
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .cemetery-sidebar {
-            width: 280px;
-            background: white;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .sidebar-section {
-            padding: 20px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .sidebar-section h6 {
-            font-weight: 800;
-            color: #1e3a8a;
-            margin-bottom: 14px;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+            /* Allow scaled map + phase labels to extend; avoid clipping */
+            overflow: visible;
         }
 
         /* Legend */
@@ -309,16 +329,22 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
 
         /* Map Container */
         .map-container {
-            flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            overflow: hidden;
+            min-height: calc(100vh - 124px);
+            /* Centering + overflow:hidden was cutting phase labels in half */
+            overflow-x: auto;
+            overflow-y: auto;
             background: #f1f5f9;
-            padding: 24px;
+            padding: 24px 24px 40px;
         }
 
-        .map-scaler { transform-origin: center center; display: inline-block; }
+        .map-scaler {
+            transform-origin: top center;
+            display: inline-block;
+            flex-shrink: 0;
+        }
 
         .map-inner {
             background: white;
@@ -406,13 +432,21 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
             width: 100%;
             margin-top: 22px;
             padding-top: 16px;
+            padding-bottom: 8px;
             border-top: 2px solid #cbd5e1;
             font-size: 13px;
             font-weight: 800;
             color: #475569;
             letter-spacing: 1px;
+            line-height: 1.35;
+            flex-shrink: 0;
         }
-        .phase-label-cell { text-align: center; text-transform: uppercase; flex: 1; }
+        .phase-label-cell {
+            text-align: center;
+            text-transform: uppercase;
+            flex: 1;
+            min-height: 1.35em;
+        }
 
         /* ── Simple Footer ── */
         .simple-footer {
@@ -443,17 +477,19 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         }
 
         /* Responsive */
-        @media (max-width: 992px) {
-            .cemetery-sidebar { width: 240px; }
-        }
         @media (max-width: 768px) {
-            .cemetery-layout { flex-direction: column; }
-            .cemetery-sidebar { width: 100%; height: auto; }
-            .sidebar-section { padding: 16px; }
             .filter-bar .row { flex-direction: column; gap: 10px; }
             .filter-bar .aa-filter { width: 100%; }
             .simple-header { padding: 12px 0; }
             .header-title { font-size: 15px; }
+            .header-logo-wrap, .header-spacer {
+                width: 46px;
+                height: 46px;
+            }
+            .header-logo-wrap img {
+                width: 36px;
+                height: 36px;
+            }
         }
     </style>
 </head>
@@ -463,13 +499,14 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
     <header class="simple-header">
         <div class="container">
             <div class="header-brand">
-                <div class="header-brand-icon">
-                    <i class="fas fa-map-location-dot"></i>
+                <div class="header-logo-wrap">
+                    <img src="img/municipal_logo.png" alt="Municipality of Tuy Logo">
                 </div>
-                <div>
+                <div class="header-center">
                     <h1 class="header-title">Municipality of Tuy, Magahis Cemetery Map</h1>
                     <p class="header-subtitle">Public Burial Records</p>
                 </div>
+                <div class="header-spacer" aria-hidden="true"></div>
             </div>
         </div>
     </header>
@@ -486,11 +523,13 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-4 aa-filter">
-                    <select id="aaStaffSectionSelect" class="form-select">
-                        <option value="1">AA Block — Section 1</option>
-                        <option value="2">AA Block — Section 2</option>
-                        <option value="3">AA Block — Section 3</option>
-                    </select>
+                    <div class="section-select-wrap">
+                        <select id="aaStaffSectionSelect" class="form-select">
+                            <option value="1">AA Block — Section 1</option>
+                            <option value="2">AA Block — Section 2</option>
+                            <option value="3">AA Block — Section 3</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-lg-4 col-md-2 d-none d-md-block">
                     <div class="text-secondary small">
@@ -503,53 +542,6 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
     </div>
 
     <div class="cemetery-layout">
-        <!-- Sidebar -->
-        <aside class="cemetery-sidebar">
-            <div class="sidebar-section">
-                <h6><i class="fas fa-chart-bar me-2"></i>Statistics</h6>
-                <div class="stat-item">
-                    <span class="stat-label">Total Plots</span>
-                    <span class="stat-value" id="totalPlots">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Occupied</span>
-                    <span class="stat-value" id="occupiedPlots" style="color: #ef4444;">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Vacant</span>
-                    <span class="stat-value" id="vacantPlots" style="color: #10b981;">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Total Buried</span>
-                    <span class="stat-value" id="totalDeceased" style="color: #3b82f6;">-</span>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <h6><i class="fas fa-map-legend me-2"></i>Map Legend</h6>
-                <div class="legend-item">
-                    <div class="legend-box occupied"></div>
-                    <span>Occupied Plot</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-box vacant"></div>
-                    <span>Vacant Plot</span>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <h6><i class="fas fa-layer-group me-2"></i>AA Block Section</h6>
-                <div class="text-muted small mb-2">
-                    Select section to filter AA block
-                </div>
-                <select id="aaStaffSectionSelect" class="form-select">
-                    <option value="1">Section 1 (Default)</option>
-                    <option value="2">Section 2</option>
-                    <option value="3">Section 3</option>
-                </select>
-            </div>
-        </aside>
-
         <!-- Map -->
         <main class="map-container" id="mapContainer">
             <div class="map-scaler" id="mapScaler">
@@ -645,7 +637,8 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
                         }
                     }
                 }
-                document.getElementById('totalDeceased').textContent = totalCount;
+                const totalDeceasedEl = document.getElementById('totalDeceased');
+                if (totalDeceasedEl) totalDeceasedEl.textContent = totalCount;
             } catch (error) {
                 console.error('Error loading deceased records:', error);
             }
@@ -654,9 +647,12 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         function updateStatistics() {
             const vacant = allPlots.filter(p => p.status === 'Vacant').length;
             const occupied = allPlots.filter(p => p.status === 'Occupied').length;
-            document.getElementById('totalPlots').textContent = allPlots.length;
-            document.getElementById('vacantPlots').textContent = vacant;
-            document.getElementById('occupiedPlots').textContent = occupied;
+            const totalEl = document.getElementById('totalPlots');
+            const vacantEl = document.getElementById('vacantPlots');
+            const occupiedEl = document.getElementById('occupiedPlots');
+            if (totalEl) totalEl.textContent = allPlots.length;
+            if (vacantEl) vacantEl.textContent = vacant;
+            if (occupiedEl) occupiedEl.textContent = occupied;
         }
 
         function renderCemeteryMap() {
@@ -744,10 +740,20 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         }
 
         function scaleMap() {
-            const container = document.getElementById('mapContainer');
+            const outer = document.getElementById('mapContainer');
             const scaler = document.getElementById('mapScaler');
-            if (!container || !scaler) return;
-            const scale = Math.min(container.clientWidth / 900, 1.2);
+            const inner = document.getElementById('mapInner');
+            if (!outer || !scaler || !inner) return;
+
+            scaler.style.transform = 'scale(1)';
+
+            const pad = 48;
+            const scale = Math.min(
+                (outer.clientWidth - pad) / Math.max(inner.scrollWidth, 1),
+                (outer.clientHeight - pad) / Math.max(inner.scrollHeight, 1),
+                1
+            );
+
             scaler.style.transform = `scale(${scale})`;
         }
 
