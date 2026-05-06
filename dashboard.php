@@ -456,7 +456,6 @@ include 'includes/header.php';
         const blocks = Object.keys(plotsByBlock).sort();
         const vacant = blocks.map(b => plotsByBlock[b].vacant || 0);
         const occupied = blocks.map(b => plotsByBlock[b].occupied || 0);
-        const reserved = blocks.map(b => (plotsByBlock[b].reserved || 0));
 
         blockDistributionChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -465,7 +464,6 @@ include 'includes/header.php';
                 datasets: [
                     { label: 'Vacant', data: vacant, backgroundColor: '#10b981' },
                     { label: 'Occupied', data: occupied, backgroundColor: '#ef4444' },
-                    { label: 'Reserved', data: reserved, backgroundColor: '#f59e0b' },
                 ]
             },
             options: {
@@ -493,17 +491,17 @@ include 'includes/header.php';
                 document.getElementById('sidebarVacant').textContent = data.stats.total_vacant || 0;
                 document.getElementById('sidebarOccupied').textContent = data.stats.total_occupied || 0;
 
-                // Group plots by block
-                const plotsByBlock = {};
-                data.plots.forEach(plot => {
-                    if (!plotsByBlock[plot.block]) {
-                        plotsByBlock[plot.block] = { total: 0, vacant: 0, occupied: 0, reserved: 0 };
-                    }
-                    plotsByBlock[plot.block].total++;
-                    if (plot.status === 'Vacant') plotsByBlock[plot.block].vacant++;
-                    if (plot.status === 'Occupied') plotsByBlock[plot.block].occupied++;
-                    if (plot.status === 'Reserved') plotsByBlock[plot.block].reserved++;
-                });
+                 // Group plots by block (exclude Reserved)
+                 const plotsByBlock = {};
+                 data.plots.forEach(plot => {
+                     if (plot.status === 'Reserved') return; // Skip reserved plots
+                     if (!plotsByBlock[plot.block]) {
+                         plotsByBlock[plot.block] = { total: 0, vacant: 0, occupied: 0 };
+                     }
+                     plotsByBlock[plot.block].total++;
+                     if (plot.status === 'Vacant') plotsByBlock[plot.block].vacant++;
+                     if (plot.status === 'Occupied') plotsByBlock[plot.block].occupied++;
+                 });
 
                 renderPlotStatusChart(
                     parseInt(data.stats.total_vacant || 0, 10),

@@ -123,13 +123,16 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         }
         .deceased-meta small { color: #64748b; }
 
-        /* ── Simple Header ── */
-        .simple-header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-            color: white;
-            padding: 0.75rem 0;
-            box-shadow: 0 2px 8px rgba(30,58,138,0.2);
-        }
+         /* ── Simple Header ── */
+         .simple-header {
+             background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+             color: white;
+             padding: 0.75rem 0;
+             box-shadow: 0 2px 8px rgba(30,58,138,0.2);
+             position: sticky;
+             top: 0;
+             z-index: 1000;
+         }
         .header-brand {
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -156,10 +159,32 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
         .header-center {
             text-align: center;
         }
-        .header-spacer {
-            width: 56px;
-            height: 56px;
-        }
+         .header-spacer {
+             width: 56px;
+             height: 56px;
+         }
+         .user-icon-link {
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             width: 40px;
+             height: 40px;
+             border-radius: 50%;
+             background: rgba(255,255,255,0.15);
+             border: 2px solid rgba(255,255,255,0.4);
+             color: white;
+             text-decoration: none;
+             transition: all 0.2s;
+         }
+         .user-icon-link:hover {
+             background: rgba(255,255,255,0.25);
+             border-color: rgba(255,255,255,0.6);
+             transform: scale(1.1);
+             color: white;
+         }
+         .user-icon-link i {
+             font-size: 18px;
+         }
         .header-title {
             font-size: 17px;
             font-weight: 800;
@@ -506,7 +531,11 @@ $pageTitle = 'Municipality of Tuy, Magahis Cemetery Map';
                     <h1 class="header-title">Municipality of Tuy, Magahis Cemetery Map</h1>
                     <p class="header-subtitle">Public Burial Records</p>
                 </div>
-                <div class="header-spacer" aria-hidden="true"></div>
+                 <div class="header-spacer" aria-hidden="true">
+                     <a href="login.php" class="user-icon-link" title="Login">
+                         <i class="fas fa-user"></i>
+                     </a>
+                 </div>
             </div>
         </div>
     </header>

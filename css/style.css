@@ -603,3 +603,22 @@ body {
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 .gap-2 { gap: 1rem; }
+
+/* Simple Footer */
+.simple-footer {
+    background-color: #000;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+    font-size: 0.875rem;
+}
+.simple-footer .footer-brand {
+    font-weight: 700;
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+.simple-footer p {
+    margin: 0;
+    opacity: 0.8;
+}
