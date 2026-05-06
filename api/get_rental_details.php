@@ -33,7 +33,7 @@ try {
                 p.payment_date,
                 p.amount as payment_amount,
                 p.status as payment_status,
-                DATEDIFF(CURDATE(), r.rental_end) as days_overdue
+                DATEDIFF(CURDATE(), r.rental_end) as days_past_rental_end
               FROM rentals r
               LEFT JOIN payments p ON r.rental_id = p.rental_id
               WHERE r.deceased_id = :deceased_id
@@ -43,7 +43,7 @@ try {
     $stmt->bindParam(':deceased_id', $deceased_id);
     $stmt->execute();
 
-    $rentals = $stmt->fetchAll();
+    $rentals = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Calculate total amount due with penalties
     $total_due = 0;
@@ -51,18 +51,28 @@ try {
 
     foreach ($rentals as &$rental) {
         if ($rental['payment_status'] === 'Paid') {
-            $total_paid += $rental['payment_amount'];
+            $total_paid += floatval($rental['payment_amount'] ?? 0);
         } else {
-            $amount = $rental['amount'];
+            $amount = floatval($rental['amount']);
+            $rental_end = new DateTime($rental['rental_end']);
+            $grace_end  = (clone $rental_end)->modify('+2 days');
+            $today      = new DateTime('today');
+            $penalty_applies = $today > $grace_end;
 
-            // Apply penalty if overdue
-            if ($rental['days_overdue'] > 0) {
-                $amount = $amount * 1.25; // 25% penalty
+            $rental['grace_days_left'] = null;
+            if ($today > $rental_end && $today <= $grace_end) {
+                $rental['grace_days_left'] = (int) $today->diff($grace_end)->days;
+            }
+
+            if ($penalty_applies) {
+                $amount = $amount * 1.25;
                 $rental['penalty_applied'] = true;
-                $rental['penalty_amount'] = $amount - $rental['amount'];
+                $rental['penalty_amount'] = $amount - floatval($rental['amount']);
+                $rental['days_overdue'] = (int) $grace_end->diff($today)->days;
             } else {
                 $rental['penalty_applied'] = false;
                 $rental['penalty_amount'] = 0;
+                $rental['days_overdue'] = 0;
             }
 
             $rental['total_amount_due'] = $amount;

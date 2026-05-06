@@ -147,38 +147,19 @@ if ($_SESSION['role'] !== 'Treasurer') {
         margin: 0;
     }
 
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
+    .payment-attention-banner {
+        display: none;
         margin-bottom: 20px;
-    }
-
-    .stat-card-compact {
-        background: white;
-        padding: 15px;
+        padding: 14px 18px;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-left: 4px solid;
+        font-size: 13px;
+        border: 1px solid #fcd34d;
+        background: #fffbeb;
+        color: #78350f;
     }
 
-    .stat-card-compact.paid { border-left-color: #10b981; }
-    .stat-card-compact.unpaid { border-left-color: #ef4444; }
-    .stat-card-compact.overdue { border-left-color: #991b1b; }
-    .stat-card-compact.total { border-left-color: #3b82f6; }
-
-    .stat-card-compact h6 {
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin: 0 0 8px 0;
-    }
-
-    .stat-card-compact .value {
-        font-size: 24px;
-        font-weight: 800;
-        color: #1e3a8a;
+    .payment-attention-banner.active {
+        display: block;
     }
 
     .content-card-compact {
@@ -186,7 +167,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         overflow: hidden;
-        height: calc(100vh - 300px);
+        height: calc(100vh - 220px);
         display: flex;
         flex-direction: column;
     }
@@ -237,7 +218,15 @@ if ($_SESSION['role'] !== 'Treasurer') {
         transition: all 0.2s;
     }
 
-    .compact-table tbody tr:hover {
+    .compact-table tbody tr.payment-row-clickable {
+        cursor: pointer;
+    }
+
+    .compact-table tbody tr.payment-row-clickable:hover {
+        background: #eff6ff;
+    }
+
+    .compact-table tbody tr:hover:not(.payment-row-clickable) {
         background: #f8fafc;
     }
 
@@ -260,17 +249,6 @@ if ($_SESSION['role'] !== 'Treasurer') {
         border-radius: 12px;
         font-size: 11px;
         font-weight: 700;
-    }
-
-    .btn-export {
-        padding: 6px 14px;
-        background: #10b981;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
     }
 
     .btn-clear {
@@ -559,6 +537,126 @@ if ($_SESSION['role'] !== 'Treasurer') {
     .rp-success-banner.show {
         display: flex;
     }
+
+    /* Payment history detail modal */
+    .pd-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        z-index: 1060;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .pd-overlay.active {
+        display: flex;
+    }
+
+    .pd-card {
+        background: white;
+        border-radius: 14px;
+        width: 720px;
+        max-width: 100%;
+        max-height: 90vh;
+        box-shadow: 0 24px 60px rgba(0, 64, 143, 0.22);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: rpSlideUp 0.25s ease;
+    }
+
+    .pd-card-header {
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #006eff, #00408f);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-shrink: 0;
+    }
+
+    .pd-card-header h5 {
+        margin: 0 0 6px;
+        font-size: 17px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .pd-card-header .pd-sub {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.5;
+    }
+
+    .pd-body {
+        padding: 16px 22px 22px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .pd-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+        font-size: 12px;
+        color: #475569;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .pd-meta strong {
+        display: block;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        margin-bottom: 2px;
+    }
+
+    .pd-table-wrap {
+        overflow-x: auto;
+    }
+
+    .pd-table {
+        width: 100%;
+        font-size: 12px;
+        border-collapse: collapse;
+    }
+
+    .pd-table th {
+        text-align: left;
+        padding: 8px 10px;
+        background: #f8fafc;
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 10px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .pd-table td {
+        padding: 10px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .pd-empty {
+        text-align: center;
+        padding: 24px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+    .pd-loading {
+        text-align: center;
+        padding: 28px;
+        color: #64748b;
+    }
 </style>
 
 <div class="payment-layout">
@@ -598,6 +696,8 @@ if ($_SESSION['role'] !== 'Treasurer') {
                     <option value="">All Status</option>
                     <option value="Paid">Paid</option>
                     <option value="Unpaid">Unpaid</option>
+                    <option value="Due Soon">Due Soon</option>
+                    <option value="Grace Period">Grace Period</option>
                     <option value="Overdue">Overdue</option>
                 </select>
             </div>
@@ -625,25 +725,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
             <h1><i class="fas fa-file-invoice-dollar"></i> Payment Transactions</h1>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="stats-row">
-            <div class="stat-card-compact paid">
-                <h6>Paid</h6>
-                <div class="value" id="paidCount">0</div>
-            </div>
-            <div class="stat-card-compact unpaid">
-                <h6>Unpaid</h6>
-                <div class="value" id="unpaidCount">0</div>
-            </div>
-            <div class="stat-card-compact overdue">
-                <h6>Overdue</h6>
-                <div class="value" id="overdueCount">0</div>
-            </div>
-            <div class="stat-card-compact total">
-                <h6>Total</h6>
-                <div class="value" id="totalCount">0</div>
-            </div>
-        </div>
+        <div class="payment-attention-banner" id="paymentAttentionBanner" role="status"></div>
 
         <!-- Payments Table -->
         <div class="content-card-compact">
@@ -651,9 +733,6 @@ if ($_SESSION['role'] !== 'Treasurer') {
                 <h5><i class="fas fa-table"></i> Payment Records</h5>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <span class="record-count-badge" id="recordCount">0 records</span>
-                    <button class="btn-export" onclick="exportReport()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
                 </div>
             </div>
             <div class="content-card-body">
@@ -764,14 +843,50 @@ if ($_SESSION['role'] !== 'Treasurer') {
     </div>
 </div>
 
+<!-- Payment history (all transactions for selected deceased) -->
+<div class="pd-overlay" id="paymentDetailsOverlay" onclick="handlePaymentDetailsOverlayClick(event)">
+    <div class="pd-card" role="dialog" aria-modal="true" aria-labelledby="pdModalTitle" onclick="event.stopPropagation()">
+        <div class="pd-card-header">
+            <div>
+                <h5 id="pdModalTitle"><i class="fas fa-history"></i> Payment history</h5>
+                <p class="pd-sub" id="pdDeceasedLine"></p>
+                <p class="pd-sub" id="pdPlotLine"></p>
+                <p class="pd-sub" style="opacity:0.75;font-size:11px;">All recorded rental payments for this deceased (oldest first).</p>
+            </div>
+            <button class="rp-close-btn" type="button" onclick="closePaymentDetailsModal()" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="pd-body">
+            <div class="pd-meta" id="pdMeta">
+                <div><strong>Contact person</strong><span id="pdContactPerson">—</span></div>
+                <div><strong>Contact number</strong><span id="pdContactNumber">—</span></div>
+            </div>
+            <div id="pdContent" class="pd-loading">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 mb-0">Loading transactions…</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include 'includes/footer.php'; ?>
 
 <script>
     let allPayments = [];
     let rpCurrentPlotId = null;
+    let didAutoOpenDetails = false;
 
-    // ─── Payment Table Logic (unchanged) ───────────────────────────────────────
+    function escapeHtml(str) {
+        if (str == null || str === '') return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ─── Payment Table Logic ───────────────────────────────────────────────────
 
     async function loadPaymentData() {
         try {
@@ -781,6 +896,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
             const section = urlParams.get('section');
             const lot = urlParams.get('lot');
             const overdueFilter = urlParams.get('overdue') === 'true';
+            const deceasedIdParam = urlParams.get('deceased_id');
 
             const response = await fetch('/api/get_payment_summary.php', { credentials: 'include' });
             const data = await response.json();
@@ -788,7 +904,10 @@ if ($_SESSION['role'] !== 'Treasurer') {
             if (data.success) {
                 allPayments = data.data.map(payment => ({
                     ...payment,
-                    Status: normalizePaymentStatus(payment.Status)
+                    Status: normalizeRowStatus(
+                        normalizePaymentStatus(payment.Status),
+                        payment
+                    )
                 }));
 
                 let filteredPayments = allPayments;
@@ -806,6 +925,8 @@ if ($_SESSION['role'] !== 'Treasurer') {
 
                 displayPayments(filteredPayments);
                 updateStats(filteredPayments);
+                bindPaymentRowClicks();
+                autoOpenPaymentDetailsFromUrl(filteredPayments, deceasedIdParam, { plotId, block, section, lot, overdueFilter });
 
                 if (overdueFilter || plotId || block || section || lot) {
                     const filterInfo = document.querySelector('.content-card-header h5');
@@ -821,19 +942,63 @@ if ($_SESSION['role'] !== 'Treasurer') {
         }
     }
 
+    function autoOpenPaymentDetailsFromUrl(filteredPayments, deceasedIdParam, filters) {
+        if (didAutoOpenDetails) return;
+
+        // If an explicit deceased_id is provided, open directly.
+        if (deceasedIdParam) {
+            const id = parseInt(deceasedIdParam, 10);
+            if (Number.isFinite(id) && id > 0) {
+                didAutoOpenDetails = true;
+                openPaymentDetailsModal(id);
+                return;
+            }
+        }
+
+        // If we came in with plot filters and it results in exactly one row, open it automatically.
+        const cameFromPlotFilter = Boolean(filters && (filters.plotId || filters.block || filters.section || filters.lot));
+        if (!cameFromPlotFilter) return;
+
+        if (Array.isArray(filteredPayments) && filteredPayments.length === 1) {
+            const only = filteredPayments[0];
+            const rawId = only.deceased_id ?? only['deceased_id'];
+            const id = parseInt(rawId, 10);
+            if (Number.isFinite(id) && id > 0) {
+                didAutoOpenDetails = true;
+                openPaymentDetailsModal(id);
+            }
+        }
+    }
+
+    function updateAttentionBanner(payments) {
+        const graceCount = payments.filter(p => p.Status === 'Grace Period').length;
+        const overdueCount = payments.filter(p => isOverduePayment(p)).length;
+        const el = document.getElementById('paymentAttentionBanner');
+
+        if (graceCount === 0 && overdueCount === 0) {
+            el.classList.remove('active');
+            el.innerHTML = '';
+            return;
+        }
+
+        el.innerHTML = `
+            <strong><i class="fas fa-exclamation-triangle"></i> Payment warnings</strong>
+            <p class="mb-0 mt-2"><strong>Grace period</strong> (still within 2 days after rental end, no penalty yet): <strong>${graceCount}</strong>
+            &nbsp;·&nbsp; <strong>Overdue</strong> (past grace, penalties may apply): <strong>${overdueCount}</strong></p>`;
+        el.classList.add('active');
+    }
+
     function updateStats(payments) {
         const paid    = payments.filter(p => p.Status === 'Paid').length;
         const unpaid  = payments.filter(p => p.Status === 'Unpaid').length;
-        const overdue = payments.filter(p => p.Status === 'Overdue').length;
-
-        document.getElementById('paidCount').textContent    = paid;
-        document.getElementById('unpaidCount').textContent  = unpaid;
-        document.getElementById('overdueCount').textContent = overdue;
-        document.getElementById('totalCount').textContent   = payments.length;
+        const overdue = payments.filter(p => isOverduePayment(p)).length;
 
         document.getElementById('sidebarPaid').textContent    = paid;
         document.getElementById('sidebarUnpaid').textContent  = unpaid;
         document.getElementById('sidebarOverdue').textContent = overdue;
+
+        // Warning should reflect the full payment dataset, not just current filters.
+        updateAttentionBanner(allPayments);
     }
 
     function displayPayments(payments) {
@@ -841,21 +1006,34 @@ if ($_SESSION['role'] !== 'Treasurer') {
         tbody.innerHTML = '';
 
         if (payments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 30px; color: #94a3b8;">No payment records found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 30px; color: #94a3b8;">No payment records found</td></tr>';
             document.getElementById('recordCount').textContent = '0 records';
             return;
         }
 
         payments.forEach(payment => {
+            const rawId = payment.deceased_id ?? payment['deceased_id'];
+            const deceasedIdNum = parseInt(rawId, 10);
+            const clickable = Number.isFinite(deceasedIdNum) && deceasedIdNum > 0;
+            const rowClass = clickable ? 'payment-row-clickable' : '';
+            const dataAttr = clickable ? `data-deceased-id="${deceasedIdNum}"` : '';
             const row = `
-                <tr>
-                    <td><strong>${payment.transaction_id}</strong></td>
-                    <td><strong>${payment['Deceased Name']}</strong></td>
-                    <td>${payment['Plot Location']}</td>
-                    <td>${payment['Date of Transaction'] ? formatDate(payment['Date of Transaction']) : 'N/A'}</td>
-                    <td>${payment['Contact Person'] || 'N/A'}</td>
-                    <td>${payment['Contact Number'] || 'N/A'}</td>
-                    <td><strong>${formatCurrency(payment['Amount'])}</strong></td>
+                <tr class="${rowClass}" ${dataAttr} ${clickable ? 'title="View all payments for this deceased" role="button" tabindex="0"' : ''}>
+                    <td><strong>${escapeHtml(payment.transaction_id)}</strong></td>
+                    <td><strong>${escapeHtml(payment['Deceased Name'])}</strong></td>
+                    <td>${escapeHtml(payment['Plot Location'])}</td>
+                    <td>${payment['Date of Transaction'] ? escapeHtml(formatDate(payment['Date of Transaction'])) : 'N/A'}</td>
+                    <td>${escapeHtml(payment['Contact Person']) || 'N/A'}</td>
+                    <td>${escapeHtml(payment['Contact Number']) || 'N/A'}</td>
+                    <td>
+                        <strong>${escapeHtml(formatCurrency(payment['Amount']))}</strong>
+                        ${(() => {
+                            const due = payment['Amount Due'];
+                            const n = typeof due === 'number' ? due : parseFloat(String(due ?? '').replace(/,/g, ''));
+                            if (!Number.isFinite(n) || n <= 0) return '';
+                            return `<div class="text-muted mt-1" style="font-size:10px;">Balance: ${escapeHtml(formatCurrency(n))}</div>`;
+                        })()}
+                    </td>
                     <td>${getStatusBadge(payment.Status)}</td>
                 </tr>
             `;
@@ -880,7 +1058,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
         let filtered = allPayments;
 
         if (overdueFilter) {
-            filtered = filtered.filter(p => p.Status === 'Overdue');
+            filtered = filtered.filter(p => isOverduePayment(p));
         }
         if (plotId || block || section || lot) {
             const plotMatch = `${block || ''} - ${section || ''} - ${lot || ''}`.trim();
@@ -891,7 +1069,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
 
         filtered = filtered.filter(payment => {
             const matchesSearch = payment['Deceased Name'].toLowerCase().includes(searchTerm);
-            const matchesStatus = !status || payment.Status === status;
+            const matchesStatus = !status || (status === 'Overdue' ? isOverduePayment(payment) : payment.Status === status);
 
             let matchesAmount = true;
             if (amountRange) {
@@ -919,7 +1097,7 @@ if ($_SESSION['role'] !== 'Treasurer') {
 
         let filtered = allPayments;
         if (overdueFilter) {
-            filtered = filtered.filter(p => p.Status === 'Overdue');
+            filtered = filtered.filter(p => isOverduePayment(p));
         }
 
         displayPayments(filtered);
@@ -931,22 +1109,166 @@ if ($_SESSION['role'] !== 'Treasurer') {
         }
     }
 
-    function exportReport() {
-        showToast('info', 'Export', 'Export functionality coming soon');
-    }
-
     function normalizePaymentStatus(status) {
-        if (status === 'Partially Paid') return 'Paid';
         if (status === 'Overdue - Partial') return 'Overdue';
         return status;
     }
 
+    function getAmountDueNumber(row) {
+        const raw = row['Amount Due'];
+        const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? '').replace(/,/g, ''));
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function isOverduePayment(row) {
+        const due = getAmountDueNumber(row);
+        if (due == null || due <= 0) return false;
+        const end = row.rental_end || row['rental_end'];
+        if (!end) return false;
+        const endDate = new Date(end);
+        if (Number.isNaN(endDate.getTime())) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate < today;
+    }
+
+    /** For table display: balances due so fully settled rentals read as Paid. */
+    function normalizeRowStatus(status, row) {
+        const base = normalizePaymentStatus(status);
+        if (isOverduePayment(row)) {
+            return 'Overdue';
+        }
+        const dueRaw = row['Amount Due'];
+        let dueNum = typeof dueRaw === 'number' ? dueRaw : parseFloat(String(dueRaw ?? '').replace(/,/g, ''));
+        if (!Number.isFinite(dueNum)) dueNum = null;
+        if (dueNum != null && dueNum <= 0 && base !== 'Vacant') {
+            return 'Paid';
+        }
+        return base;
+    }
+
+    function bindPaymentRowClicks() {
+        const tbody = document.getElementById('paymentsTableBody');
+        if (!tbody || tbody.dataset.bound === '1') return;
+        tbody.dataset.bound = '1';
+        tbody.addEventListener('click', function (e) {
+            const row = e.target.closest('tr[data-deceased-id]');
+            if (!row) return;
+            const id = parseInt(row.getAttribute('data-deceased-id'), 10);
+            if (Number.isFinite(id) && id > 0) openPaymentDetailsModal(id);
+        });
+        tbody.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const row = e.target.closest('tr[data-deceased-id]');
+            if (!row) return;
+            e.preventDefault();
+            const id = parseInt(row.getAttribute('data-deceased-id'), 10);
+            if (Number.isFinite(id) && id > 0) openPaymentDetailsModal(id);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        bindPaymentRowClicks();
         setTimeout(() => { loadPaymentData(); }, 500);
         // Set today's date as default for the record payment modal
         document.getElementById('rpDate').valueAsDate = new Date();
     });
 
+    // ─── Payment history modal (all transactions per deceased) ─────────────────
+
+    function setPaymentDetailsLoading() {
+        const el = document.getElementById('pdContent');
+        el.className = 'pd-loading';
+        el.innerHTML = '<div class="spinner-border text-primary" role="status"></div><p class="mt-2 mb-0">Loading transactions…</p>';
+    }
+
+    function closePaymentDetailsModal() {
+        document.getElementById('paymentDetailsOverlay').classList.remove('active');
+    }
+
+    function handlePaymentDetailsOverlayClick(e) {
+        if (e.target === document.getElementById('paymentDetailsOverlay')) {
+            closePaymentDetailsModal();
+        }
+    }
+
+    function renderPaymentHistoryRows(transactions) {
+        if (!transactions.length) {
+            return '<div class="pd-empty">No recorded payments yet for this deceased.</div>';
+        }
+        let rows = '';
+        transactions.forEach((t, idx) => {
+            const start = t.rental_start ? formatDate(t.rental_start) : '—';
+            const end = t.rental_end ? formatDate(t.rental_end) : '—';
+            const datePaid = t.payment_date ? formatDate(t.payment_date) : '—';
+            const amt = formatCurrency(t.amount);
+            const balRaw = t.balance_remaining;
+            const balNum = typeof balRaw === 'number' ? balRaw : parseFloat(String(balRaw ?? ''));
+            const balanceStr = Number.isFinite(balNum)
+                ? formatCurrency(balNum)
+                : '—';
+            const dispStatus = t.display_status || t.status || 'Pending';
+            const statusHtml = getStatusBadge(dispStatus);
+            rows += `<tr>
+                <td>${idx + 1}</td>
+                <td>${escapeHtml(String(t.payment_id))}</td>
+                <td>${escapeHtml(datePaid)}</td>
+                <td><strong>${escapeHtml(amt)}</strong></td>
+                <td>${escapeHtml(balanceStr)}</td>
+                <td>${statusHtml}</td>
+                <td>${escapeHtml(start)} – ${escapeHtml(end)}</td>
+                <td>${escapeHtml(String(t.rental_id))}</td>
+            </tr>`;
+        });
+        return `<div class="pd-table-wrap"><table class="pd-table">
+            <thead><tr>
+                <th>#</th>
+                <th>Payment ID</th>
+                <th>Date paid</th>
+                <th>Amount</th>
+                <th>Balance left</th>
+                <th>Status</th>
+                <th>Rental period</th>
+                <th>Rental ID</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>`;
+    }
+
+    async function openPaymentDetailsModal(deceasedId) {
+        const overlay = document.getElementById('paymentDetailsOverlay');
+        overlay.classList.add('active');
+        document.getElementById('pdDeceasedLine').textContent = '';
+        document.getElementById('pdPlotLine').textContent = '';
+        document.getElementById('pdContactPerson').textContent = '—';
+        document.getElementById('pdContactNumber').textContent = '—';
+        setPaymentDetailsLoading();
+
+        try {
+            const res = await fetch(`/api/get_deceased_payment_history.php?deceased_id=${encodeURIComponent(deceasedId)}`, { credentials: 'include' });
+            const data = await res.json();
+
+            if (!data.success) {
+                document.getElementById('pdContent').className = 'pd-empty';
+                document.getElementById('pdContent').textContent = data.message || 'Could not load payment history.';
+                return;
+            }
+
+            document.getElementById('pdDeceasedLine').textContent = data.deceased_name || '—';
+            document.getElementById('pdPlotLine').textContent = data.plot_location ? `Plot: ${data.plot_location}` : '';
+            document.getElementById('pdContactPerson').textContent = data.contact_person || '—';
+            document.getElementById('pdContactNumber').textContent = data.contact_number || '—';
+
+            const content = document.getElementById('pdContent');
+            content.className = '';
+            content.innerHTML = renderPaymentHistoryRows(data.transactions || []);
+        } catch (err) {
+            console.error(err);
+            document.getElementById('pdContent').className = 'pd-empty';
+            document.getElementById('pdContent').textContent = 'Error loading payment history.';
+        }
+    }
 
     // ─── Record Payment Modal Logic ────────────────────────────────────────────
 
@@ -1101,8 +1423,12 @@ if ($_SESSION['role'] !== 'Treasurer') {
         }
     }
 
-    // Keyboard shortcut: Escape closes the modal
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeRecordPaymentModal();
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('paymentDetailsOverlay').classList.contains('active')) {
+            closePaymentDetailsModal();
+        } else {
+            closeRecordPaymentModal();
+        }
     });
 </script>

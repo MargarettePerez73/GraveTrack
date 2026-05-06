@@ -241,7 +241,7 @@ include 'includes/header.php';
     .legend-box.fully-paid    { background: #10b981; border-color: #059669; }
     .legend-box.partially-paid{ background: #f59e0b; border-color: #d97706; }
     .legend-box.unpaid        { background: #ef4444; border-color: #dc2626; }
-    .legend-box.overdue       { background: #991b1b; border-color: #7f1d1d; }
+
 
     /* Stats */
     .stat-item {
@@ -350,6 +350,8 @@ include 'includes/header.php';
     .lot-box.partially-paid{ background: #f59e0b; border-color: #d97706; color: white; }
     .lot-box.unpaid        { background: #ef4444; border-color: #dc2626; color: white; }
     .lot-box.overdue       { background: #991b1b; border-color: #7f1d1d; color: white; }
+    .lot-box.due-soon      { background: #ea580c; border-color: #c2410c; color: white; }
+    .lot-box.grace-period  { background: #0284c7; border-color: #0369a1; color: white; }
 
     /* Search highlight/blur effects */
     .lot-box.highlighted {
@@ -603,11 +605,11 @@ include 'includes/header.php';
             <div id="treasurerLegend" style="display:none;">
                 <div class="legend-item">
                     <div class="legend-box fully-paid"></div>
-                    <span>Paid (Full 3-Year)</span>
+                    <span>Paid</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-box fully-paid"></div>
-                    <span>Paid</span>
+                    <div class="legend-box partially-paid"></div>
+                    <span>Partially Paid</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-box unpaid"></div>
@@ -615,8 +617,9 @@ include 'includes/header.php';
                 </div>
                 <div class="legend-item">
                     <div class="legend-box overdue"></div>
-                    <span>Overdue (Penalty Applied)</span>
+                    <span>Overdue</span>
                 </div>
+                
                 <div class="mt-3">
                     <a href="payment_monitoring.php?overdue=true" class="btn btn-warning btn-sm w-100" target="_blank">
                         <i class="fas fa-exclamation-triangle"></i> View All Overdue Payments
@@ -835,14 +838,43 @@ async function loadAllDeceasedRecords() {
     }
 }
 
+function paymentStatusRank(status) {
+    const s = status || '';
+    const rank = {
+        'Overdue': 60,
+        'Overdue - Partial': 60,
+        'Grace Period': 50,
+        'Due Soon': 45,
+        'Unpaid': 40,
+        'No Rental': 35,
+        'Partially Paid': 30,
+        'Paid': 10,
+        'Vacant': 0
+    };
+    return rank[s] ?? 25;
+}
+
+function pickMoreSeverePaymentStatus(a, b) {
+    return paymentStatusRank(b) > paymentStatusRank(a) ? b : a;
+}
+
 async function loadPaymentData() {
     try {
         const response = await fetch('/api/get_payment_summary.php', { credentials: 'include' });
         const data     = await response.json();
 
         if (data.success) {
+            paymentData = {};
             data.data.forEach(payment => {
-                paymentData[payment['Plot Location']] = payment['Status'];
+                const loc = payment['Plot Location'];
+                const name = String(payment['Deceased Name'] || '').trim();
+                const st = payment['Status'];
+                if (name) {
+                    paymentData[`${loc}|${name}`] = st;
+                }
+                paymentData[loc] = paymentData[loc]
+                    ? pickMoreSeverePaymentStatus(paymentData[loc], st)
+                    : st;
             });
         }
     } catch (error) {
@@ -944,11 +976,13 @@ function renderBlockColumn(blockName, phaseName, findPlot, lotsCount = 20) {
         const displayBlock = blockName || 'Unnamed';
         const plotSection = plot ? plot.section : '';
 
-        // Hover tooltip should show deceased names (or Vacant)
+        // Hover tooltip: show plot details + buried names (or Vacant)
         const deceasedNames = plot && plot.deceased_names ? String(plot.deceased_names) : '';
-        const tooltip = plot
-            ? (deceasedNames ? deceasedNames : (plot.status === 'Vacant' ? 'Vacant' : 'Occupied'))
-            : 'Vacant';
+        const tooltipLine1 = `Block ${displayBlock}${plotSection ? `, Section ${plotSection}` : ''}, Lot ${lot} (${phaseName})`;
+        const tooltipLine2 = plot
+            ? (deceasedNames ? `Buried: ${deceasedNames}` : (plot.status === 'Vacant' ? 'Vacant' : 'Occupied'))
+            : 'Vacant (no DB record)';
+        const tooltip = `${tooltipLine1} — ${tooltipLine2}`;
 
         html += `
             <div class="lot-box ${colorClass}"
@@ -970,11 +1004,14 @@ function getPlotColorClass(plot) {
     if (userRole === 'Treasurer') {
         if (plot.status === 'Vacant') return 'vacant';
 
-        const key           = `${plot.block} - ${plot.section} - ${plot.lot}`;
-        const paymentStatus = paymentData[key];
+        const paymentStatus = plot.payment_status || 'Unpaid';
 
-        if (paymentStatus === 'Paid' || paymentStatus === 'Partially Paid') return 'fully-paid';
+        if (paymentStatus === 'Paid') return 'fully-paid';
+        if (paymentStatus === 'Partially Paid') return 'partially-paid';
         if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') return 'overdue';
+        if (paymentStatus === 'Grace Period') return 'grace-period';
+        if (paymentStatus === 'Due Soon') return 'due-soon';
+        if (paymentStatus === 'Vacant') return 'vacant';
         return 'unpaid';
     }
 
@@ -1147,19 +1184,29 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName, focusDec
                 `;
 
                 let isOverdue = false;
+                let isDueSoon = false;
+                let isGrace = false;
                 const paymentTargetRecord = getPaymentTargetRecord(data.deceased_records);
                 const paymentTargetName = paymentTargetRecord
                     ? escapeJsString(paymentTargetRecord.full_name || '')
                     : '';
+                const plotLocKey = `${data.plot.block} - ${data.plot.section} - ${data.plot.lot}`;
+                const mapPlotRow = allPlots.find(p => String(p.plot_id) === String(plotId));
 
                 data.deceased_records.forEach(record => {
-                    const key = `${data.plot.block} - ${data.plot.section} - ${data.plot.lot}`;
-                    const paymentStatus = paymentData[key] || data.plot.payment_status || 'Unknown';
-                    const displayPaymentStatus = paymentStatus === 'Partially Paid' ? 'Paid' : paymentStatus;
+                    const deceasedKey = `${plotLocKey}|${String(record.full_name || '').trim()}`;
+                    const paymentStatus =
+                        paymentData[deceasedKey]
+                        || paymentData[plotLocKey]
+                        || (mapPlotRow && mapPlotRow.payment_status)
+                        || 'Unknown';
+                    const displayPaymentStatus = paymentStatus;
                     const statusBadgeColor =
                         displayPaymentStatus === 'Paid'              ? 'success' :
                         paymentStatus === 'Overdue'           ? 'danger'  :
-                        paymentStatus === 'Overdue - Partial' ? 'danger'  : 'secondary';
+                        paymentStatus === 'Overdue - Partial' ? 'danger'  :
+                        paymentStatus === 'Due Soon'         ? 'warning' :
+                        paymentStatus === 'Grace Period'     ? 'info'    : 'secondary';
 
                     const rentalInfo = record.rental_end_date
                         ? `3 years (ends ${formatDate(record.rental_end_date)})`
@@ -1167,6 +1214,12 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName, focusDec
 
                     if (paymentStatus === 'Overdue' || paymentStatus === 'Overdue - Partial') {
                         isOverdue = true;
+                    }
+                    if (paymentStatus === 'Due Soon') {
+                        isDueSoon = true;
+                    }
+                    if (paymentStatus === 'Grace Period') {
+                        isGrace = true;
                     }
 
                     content += `
@@ -1189,17 +1242,33 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName, focusDec
 
                 content += `</div>`;
 
+                if (isDueSoon) {
+                    content += `
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Due soon:</strong> This plot’s rental period ends within <strong>14 days</strong>. Please follow up on payment before the due date.
+                        </div>
+                    `;
+                }
+                if (isGrace) {
+                    content += `
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            <strong>Grace period (2 days):</strong> The rental end date has passed, but clients still have <strong>2 calendar days</strong> to pay <strong>without</strong> the late penalty. After that, a <strong>25% penalty</strong> applies on the renewal (e.g. <strong>₱500</strong> on the standard <strong>₱2,000</strong> / 3-year rate).
+                        </div>
+                    `;
+                }
                 if (isOverdue) {
                     content += `
                         <div class="alert alert-warning mt-3 mb-0">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                <strong>Overdue rental payments — penalty applied</strong>
+                                <strong>Overdue — penalty applies</strong> (after the 2-day grace from rental end).
                             </div>
                             <div class="d-flex gap-2">
                                 <a href="payment_monitoring.php?plot_id=${plotId}&block=${data.plot.block}&section=${data.plot.section}&lot=${data.plot.lot}&overdue=true"
                                    class="btn btn-warning flex-fill">
-                                    <i class="fas fa-dollar-sign"></i> View Payments
+                                    <i class="fas fa-dollar-sign"></i> View Overdue Payments
                                 </a>
                                 <button class="btn btn-outline-warning"
                                         onclick="openPaymentModal(${plotId}, '${data.plot.block}', '${data.plot.section}', '${data.plot.lot}', ${paymentTargetRecord ? paymentTargetRecord.rental_id : 'null'}, ${paymentTargetRecord ? paymentTargetRecord.deceased_id : 'null'}, '${paymentTargetName}')">
@@ -1208,17 +1277,20 @@ async function viewPlotDetails(plotId, blockName, lotNumber, phaseName, focusDec
                             </div>
                         </div>
                     `;
-                } else {
-                    /* Non-overdue occupied plot: still allow recording payment */
-                    content += `
-                        <div class="text-end mt-3">
-                            <button class="btn btn-outline-primary btn-sm"
-                                    onclick="openPaymentModal(${plotId}, '${data.plot.block}', '${data.plot.section}', '${data.plot.lot}', ${paymentTargetRecord ? paymentTargetRecord.rental_id : 'null'}, ${paymentTargetRecord ? paymentTargetRecord.deceased_id : 'null'}, '${paymentTargetName}')">
-                                <i class="fas fa-plus me-1"></i> Record Payment
-                            </button>
-                        </div>
-                    `;
                 }
+
+                content += `
+                    <div class="d-flex flex-wrap gap-2 justify-content-end mt-3">
+                        <a href="payment_monitoring.php?plot_id=${plotId}&block=${data.plot.block}&section=${data.plot.section}&lot=${data.plot.lot}"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-table"></i> Payment monitoring
+                        </a>
+                        <button type="button" class="btn btn-primary btn-sm"
+                                onclick="openPaymentModal(${plotId}, '${data.plot.block}', '${data.plot.section}', '${data.plot.lot}', ${paymentTargetRecord ? paymentTargetRecord.rental_id : 'null'}, ${paymentTargetRecord ? paymentTargetRecord.deceased_id : 'null'}, '${paymentTargetName}')">
+                            <i class="fas fa-plus me-1"></i> Record Payment
+                        </button>
+                    </div>
+                `;
 
             } else {
                 content += `

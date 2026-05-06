@@ -38,12 +38,12 @@ try {
     $amount = isset($data['amount']) ? floatval($data['amount']) : $rental['amount'];
     $payment_date = isset($data['payment_date']) ? $data['payment_date'] : date('Y-m-d');
 
-    // Check if payment is overdue and apply penalty
+    // 25% penalty only after a 2-day grace period past rental_end (base renewal ₱2,000 → ₱500 penalty)
     $rental_end = new DateTime($rental['rental_end']);
-    $today = new DateTime();
+    $grace_end  = (clone $rental_end)->modify('+2 days');
+    $today      = new DateTime('today');
 
-    if ($today > $rental_end && $rental['status'] === 'Unpaid') {
-        // Apply 25% penalty
+    if ($today > $grace_end && $rental['status'] === 'Unpaid') {
         $amount = $amount * 1.25;
     }
 

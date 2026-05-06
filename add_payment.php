@@ -260,8 +260,8 @@ $plot_id = isset($_GET['plot_id']) ? intval($_GET['plot_id']) : 0;
                     ₱2,000 per 3-year rental period
                 </p>
                 <p style="font-size: 12px; margin: 0; opacity: 0.9;">
-                    <strong>Late Penalty:</strong><br>
-                    25% penalty for overdue payments
+                    <strong>Late penalty:</strong><br>
+                    2-day grace after rental end, then 25% on the renewal (e.g. ₱500 on ₱2,000)
                 </p>
             </div>
         </div>

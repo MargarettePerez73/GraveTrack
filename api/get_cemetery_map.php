@@ -61,19 +61,103 @@ try {
                 CASE 
                     WHEN p.status = 'Vacant' THEN 'Vacant'
                     WHEN NOT EXISTS (SELECT 1 FROM rentals r WHERE r.plot_id = p.plot_id) THEN 'Vacant'
-                    ELSE CASE 
-                        -- Guardrail: if rental amount is 0/NULL, never show Paid automatically
-                        WHEN MAX(r.amount) IS NULL OR MAX(r.amount) <= 0 THEN 'Unpaid'
-                        WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) >= MAX(r.amount) AND MAX(r.rental_end) >= CURDATE() THEN 'Paid'
-                        WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) > 0 AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) < MAX(r.amount) THEN 'Partially Paid'
-                        WHEN MAX(r.rental_end) < CURDATE() AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) = 0 THEN 'Overdue'
-                        WHEN MAX(r.rental_end) < CURDATE() THEN 'Overdue - Partial'
+                    ELSE CASE
+                        /* Highest-priority per-plot status from each deceased's latest rental. */
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM deceased d2
+                            INNER JOIN rentals r2 ON r2.deceased_id = d2.deceased_id
+                            WHERE d2.plot_id = p.plot_id
+                              AND r2.rental_end = (
+                                  SELECT MAX(r3.rental_end)
+                                  FROM rentals r3
+                                  WHERE r3.deceased_id = r2.deceased_id
+                              )
+                              AND r2.rental_end < CURDATE()
+                              AND COALESCE((
+                                  SELECT SUM(pay2.amount)
+                                  FROM payments pay2
+                                  WHERE pay2.rental_id = r2.rental_id
+                                    AND pay2.status = 'Paid'
+                              ), 0) < (CASE WHEN r2.rental_end < CURDATE() THEN COALESCE(r2.amount, 0) * 1.25 ELSE COALESCE(r2.amount, 0) END)
+                        ) THEN 'Overdue'
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM deceased d2
+                            INNER JOIN rentals r2 ON r2.deceased_id = d2.deceased_id
+                            WHERE d2.plot_id = p.plot_id
+                              AND r2.rental_end = (
+                                  SELECT MAX(r3.rental_end)
+                                  FROM rentals r3
+                                  WHERE r3.deceased_id = r2.deceased_id
+                              )
+                              AND r2.rental_end >= CURDATE()
+                              AND DATEDIFF(r2.rental_end, CURDATE()) <= 14
+                              AND COALESCE((
+                                  SELECT SUM(pay2.amount)
+                                  FROM payments pay2
+                                  WHERE pay2.rental_id = r2.rental_id
+                                    AND pay2.status = 'Paid'
+                              ), 0) < (CASE WHEN r2.rental_end < CURDATE() THEN COALESCE(r2.amount, 0) * 1.25 ELSE COALESCE(r2.amount, 0) END)
+                        ) THEN 'Due Soon'
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM deceased d2
+                            INNER JOIN rentals r2 ON r2.deceased_id = d2.deceased_id
+                            WHERE d2.plot_id = p.plot_id
+                              AND r2.rental_end = (
+                                  SELECT MAX(r3.rental_end)
+                                  FROM rentals r3
+                                  WHERE r3.deceased_id = r2.deceased_id
+                              )
+                              AND COALESCE((
+                                  SELECT SUM(pay2.amount)
+                                  FROM payments pay2
+                                  WHERE pay2.rental_id = r2.rental_id
+                                    AND pay2.status = 'Paid'
+                              ), 0) > 0
+                              AND COALESCE((
+                                  SELECT SUM(pay2.amount)
+                                  FROM payments pay2
+                                  WHERE pay2.rental_id = r2.rental_id
+                                    AND pay2.status = 'Paid'
+                              ), 0) < (CASE WHEN r2.rental_end < CURDATE() THEN COALESCE(r2.amount, 0) * 1.25 ELSE COALESCE(r2.amount, 0) END)
+                        ) THEN 'Partially Paid'
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM deceased d2
+                            INNER JOIN rentals r2 ON r2.deceased_id = d2.deceased_id
+                            WHERE d2.plot_id = p.plot_id
+                              AND r2.rental_end = (
+                                  SELECT MAX(r3.rental_end)
+                                  FROM rentals r3
+                                  WHERE r3.deceased_id = r2.deceased_id
+                              )
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM deceased d2
+                            INNER JOIN rentals r2 ON r2.deceased_id = d2.deceased_id
+                            WHERE d2.plot_id = p.plot_id
+                              AND r2.rental_end = (
+                                  SELECT MAX(r3.rental_end)
+                                  FROM rentals r3
+                                  WHERE r3.deceased_id = r2.deceased_id
+                              )
+                              AND COALESCE((
+                                  SELECT SUM(pay2.amount)
+                                  FROM payments pay2
+                                  WHERE pay2.rental_id = r2.rental_id
+                                    AND pay2.status = 'Paid'
+                              ), 0) < (CASE WHEN r2.rental_end < CURDATE() THEN COALESCE(r2.amount, 0) * 1.25 ELSE COALESCE(r2.amount, 0) END)
+                        ) THEN 'Paid'
                         ELSE 'Unpaid'
                     END
                 END as payment_status,
                 MAX(r.rental_end) as rental_end_date,
-                CASE 
-                    WHEN MAX(r.rental_end) < CURDATE() THEN DATEDIFF(CURDATE(), MAX(r.rental_end))
+                CASE
+                    WHEN MAX(r.rental_end) < CURDATE()
+                    THEN DATEDIFF(CURDATE(), MAX(r.rental_end))
                     ELSE NULL
                 END as days_overdue
               FROM plots p

@@ -153,7 +153,11 @@ function getStatusBadge(status) {
         'Paid': '<span class="badge badge-paid">Paid</span>',
         'Unpaid': '<span class="badge badge-unpaid">Unpaid</span>',
         'Pending': '<span class="badge badge-pending">Pending</span>',
-        'Overdue': '<span class="badge badge-overdue">Overdue</span>'
+        'Overdue': '<span class="badge badge-overdue">Overdue</span>',
+        'Due Soon': '<span class="badge badge-due-soon">Due Soon</span>',
+        'Grace Period': '<span class="badge badge-grace">Grace Period</span>',
+        'Partially Paid': '<span class="badge badge-partial">Partially Paid</span>',
+        'Overdue - Partial': '<span class="badge badge-overdue">Overdue (Partial)</span>'
     };
     return badges[status] || `<span class="badge">${status}</span>`;
 }

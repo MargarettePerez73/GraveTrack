@@ -18,6 +18,7 @@ try {
 
     // Get payment summary for all occupied plots
     $query = "SELECT
+                d.deceased_id AS deceased_id,
                 CONCAT(p.block, ' - ', p.section, ' - ', p.lot) as 'Plot Location',
                 d.full_name as 'Deceased Name',
                 d.date_of_burial as 'Date of Burial',
@@ -29,17 +30,42 @@ try {
                 r.amount as 'Rental Amount',
                 COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Amount',
                 COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Total Paid',
-                r.amount - COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Amount Due',
+                (
+                    CASE
+                        WHEN r.rental_end < CURDATE() THEN (r.amount * 1.25)
+                        ELSE r.amount
+                    END
+                ) - COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) as 'Amount Due',
                 CASE 
                     WHEN p.status = 'Vacant' THEN 'Vacant'
                     WHEN r.rental_id IS NULL THEN 'No Rental'
-                    WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) >= r.amount AND r.rental_end >= CURDATE() THEN 'Paid'
-                    WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) > 0 AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) < r.amount THEN 'Partially Paid'
-                    WHEN r.rental_end < CURDATE() AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) = 0 THEN 'Overdue'
-                    WHEN r.rental_end < CURDATE() THEN 'Overdue - Partial'
+                    -- If fully paid, always show Paid (even if past due date)
+                    WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) >=
+                         (CASE WHEN r.rental_end < CURDATE() THEN (r.amount * 1.25) ELSE r.amount END) THEN 'Paid'
+                    WHEN r.rental_end >= CURDATE()
+                         AND DATEDIFF(r.rental_end, CURDATE()) <= 14
+                         AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) <
+                             (CASE WHEN r.rental_end < CURDATE() THEN (r.amount * 1.25) ELSE r.amount END) THEN 'Due Soon'
+                    -- Overdue is now based directly on rental_end date
+                    WHEN r.rental_end < CURDATE()
+                         AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) <
+                             (CASE WHEN r.rental_end < CURDATE() THEN (r.amount * 1.25) ELSE r.amount END) THEN 'Overdue'
+                    WHEN COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) > 0
+                         AND COALESCE(SUM(CASE WHEN pay.status = 'Paid' THEN pay.amount ELSE 0 END), 0) <
+                             (CASE WHEN r.rental_end < CURDATE() THEN (r.amount * 1.25) ELSE r.amount END) THEN 'Partially Paid'
                     ELSE 'Unpaid'
                 END as 'Status',
-                DATEDIFF(CURDATE(), r.rental_end) as 'Days Overdue',
+                CASE
+                    WHEN r.rental_id IS NULL THEN NULL
+                    WHEN r.rental_end >= CURDATE() THEN DATEDIFF(r.rental_end, CURDATE())
+                    ELSE NULL
+                END as 'Days Until Due',
+                NULL as 'Grace Days Left',
+                CASE
+                    WHEN r.rental_end < CURDATE()
+                    THEN DATEDIFF(CURDATE(), r.rental_end)
+                    ELSE NULL
+                END as 'Days Overdue',
                 c.contact_person as 'Contact Person',
                 c.contact_number as 'Contact Number'
               FROM plots p
@@ -54,7 +80,7 @@ try {
     $stmt = $db->prepare($query);
     $stmt->execute();
 
-    $payments = $stmt->fetchAll();
+    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'success' => true,

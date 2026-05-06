@@ -55,6 +55,28 @@ try {
         throw new Exception('Invalid rental period or deceased ID');
     }
 
+    // Compute current total paid for this rental (before inserting this payment)
+    $sumSql = "SELECT COALESCE(SUM(CASE WHEN status = 'Paid' THEN amount ELSE 0 END), 0) AS total_paid
+               FROM payments
+               WHERE rental_id = :rental_id";
+    $sumStmt = $conn->prepare($sumSql);
+    $sumStmt->bindParam(':rental_id', $rental_id, PDO::PARAM_INT);
+    $sumStmt->execute();
+    $sumRow = $sumStmt->fetch(PDO::FETCH_ASSOC);
+    $totalPaidBefore = floatval($sumRow['total_paid'] ?? 0);
+
+    // Apply 25% overdue penalty based on rental_end date.
+    // Penalized target = rental amount + 25% of rental amount.
+    $rentalAmount = floatval($rental['amount']);
+    $isOverdue = strtotime($rental['rental_end']) < strtotime(date('Y-m-d'));
+    $penaltyAmount = $isOverdue ? ($rentalAmount * 0.25) : 0.0;
+    $requiredTotal = $rentalAmount + $penaltyAmount;
+    $remainingNeeded = max(0, $requiredTotal - $totalPaidBefore);
+    if ($remainingNeeded > 0 && $amount > $remainingNeeded) {
+        // Clamp overpayment so system does not accidentally exceed required total.
+        $amount = $remainingNeeded;
+    }
+
     // Insert payment record
     $insertSql = "
         INSERT INTO payments (
@@ -81,16 +103,23 @@ try {
 
     $payment_id = $conn->lastInsertId();
 
-    // Update rental status to Paid
-    $updateSql = "UPDATE rentals SET status = 'Paid' WHERE rental_id = :rental_id";
+    // Update rental status based on new cumulative amount (includes overdue penalty if applicable)
+    $newTotalPaid = $totalPaidBefore + $amount;
+    $newStatus = ($newTotalPaid + 0.0001 >= $requiredTotal) ? 'Paid' : 'Unpaid';
+    $updateSql = "UPDATE rentals SET status = :status WHERE rental_id = :rental_id";
     $updateStmt = $conn->prepare($updateSql);
+    $updateStmt->bindParam(':status', $newStatus, PDO::PARAM_STR);
     $updateStmt->bindParam(':rental_id', $rental_id, PDO::PARAM_INT);
     $updateStmt->execute();
 
     echo json_encode([
         'success' => true,
         'message' => 'Payment recorded successfully',
-        'payment_id' => $payment_id
+        'payment_id' => $payment_id,
+        'penalty_applied' => $isOverdue,
+        'required_total' => round($requiredTotal, 2),
+        'total_paid' => round($newTotalPaid, 2),
+        'remaining_balance' => round(max(0, $requiredTotal - $newTotalPaid), 2)
     ]);
 
 } catch (Exception $e) {

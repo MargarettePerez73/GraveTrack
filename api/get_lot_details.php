@@ -48,6 +48,9 @@ try {
         r.status AS rental_status,
 
         CASE
+            WHEN r.rental_end IS NULL THEN NULL
+            WHEN r.rental_end >= CURDATE()
+                 AND DATEDIFF(r.rental_end, CURDATE()) <= 14 THEN 'Due Soon'
             WHEN r.rental_end < CURDATE() THEN 'Overdue'
             ELSE 'Active'
         END AS computed_status

@@ -408,6 +408,21 @@ body {
   color: var(--white);
 }
 
+.badge-due-soon {
+  background: #c2410c;
+  color: var(--white);
+}
+
+.badge-grace {
+  background: #0369a1;
+  color: var(--white);
+}
+
+.badge-partial {
+  background: #b45309;
+  color: var(--white);
+}
+
 /* Search & Filters */
 .search-filter-section {
   background: var(--white);

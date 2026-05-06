@@ -121,45 +121,12 @@ include 'includes/header.php';
         margin: 0;
     }
 
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        margin-bottom: 20px;
-    }
-
-    .stat-card-compact {
-        background: white;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border-left: 4px solid;
-    }
-
-    .stat-card-compact.vacant { border-left-color: #10b981; }
-    .stat-card-compact.occupied { border-left-color: #ef4444; }
-    .stat-card-compact.total { border-left-color: #3b82f6; }
-
-    .stat-card-compact h6 {
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin: 0 0 8px 0;
-    }
-
-    .stat-card-compact .value {
-        font-size: 24px;
-        font-weight: 800;
-        color: #1e3a8a;
-    }
-
     .content-card-compact {
         background: white;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         overflow: hidden;
-        height: calc(100vh - 260px);
+        height: calc(100vh - 200px);
         display: flex;
         flex-direction: column;
     }
@@ -405,22 +372,6 @@ include 'includes/header.php';
             <h1><i class="fas fa-chart-bar"></i> Plot Availability</h1>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="stats-row">
-            <div class="stat-card-compact vacant">
-                <h6>Vacant Plots</h6>
-                <div class="value" id="vacantCount">0</div>
-            </div>
-            <div class="stat-card-compact occupied">
-                <h6>Occupied Plots</h6>
-                <div class="value" id="occupiedCount">0</div>
-            </div>
-            <div class="stat-card-compact total">
-                <h6>Total Plots</h6>
-                <div class="value" id="totalCount">0</div>
-            </div>
-        </div>
-
         <!-- Plots Table -->
         <div class="content-card-compact">
             <div class="content-card-header">
@@ -482,11 +433,6 @@ include 'includes/header.php';
             if (data.success) {
                 allPlots = data.plots;
                 blocks = data.blocks;
-
-                // Update stats
-                document.getElementById('vacantCount').textContent = data.stats.total_vacant;
-                document.getElementById('occupiedCount').textContent = data.stats.total_occupied;
-                document.getElementById('totalCount').textContent = data.stats.total_plots;
 
                 document.getElementById('sidebarVacant').textContent = data.stats.total_vacant;
                 document.getElementById('sidebarOccupied').textContent = data.stats.total_occupied;
